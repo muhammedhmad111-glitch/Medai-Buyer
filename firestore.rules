@@ -34,6 +34,9 @@ service cloud.firestore {
       match /projects/{document=**} {
         allow read, write: if isOwner(userId);
       }
+      match /insights/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Public access to the main portfolio (if we want a default one or shared ones)

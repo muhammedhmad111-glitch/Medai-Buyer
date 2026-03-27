@@ -27,6 +27,7 @@ import {
   Save,
   Upload,
   User,
+  Camera,
   LogOut,
   LogIn,
   Brain,
@@ -227,6 +228,33 @@ const initialProjects = [
   }
 ];
 
+const initialInsights = [
+  {
+    id: '1',
+    title: 'Snapchat Sales Campaign',
+    market: 'Saudi Arabia Market',
+    metrics: [
+      { label: 'Click Rate', value: '1.94%' },
+      { label: 'ECPC', value: '$0.22' }
+    ],
+    description: 'Achieved 100% female audience penetration with iOS-exclusive targeting, resulting in high-quality traffic for luxury and beauty segments.',
+    icon: 'Smartphone',
+    color: '#fffc00'
+  },
+  {
+    id: '2',
+    title: 'TikTok Conversion Ads',
+    market: 'E-commerce Focus',
+    metrics: [
+      { label: 'Impressions', value: '244K+' },
+      { label: 'CPC (Destination)', value: 'SAR 0.19' }
+    ],
+    description: 'Optimized ad structures to maintain low CPMs while scaling reach, delivering over 2,600+ high-intent clicks within targeted budget windows.',
+    icon: 'BarChart3',
+    color: '#00f2ea'
+  }
+];
+
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -253,6 +281,7 @@ export default function App() {
   const [experiences, setExperiences] = useState(initialExperiences);
   const [skills, setSkills] = useState(initialSkills);
   const [projects, setProjects] = useState(initialProjects);
+  const [insights, setInsights] = useState(initialInsights);
 
   // Draft States for Admin
   const [draftHero, setDraftHero] = useState(hero);
@@ -264,6 +293,7 @@ export default function App() {
   const [draftExperiences, setDraftExperiences] = useState(experiences);
   const [draftSkills, setDraftSkills] = useState(skills);
   const [draftProjects, setDraftProjects] = useState(projects);
+  const [draftInsights, setDraftInsights] = useState(insights);
 
   // Firebase Auth Listener
   useEffect(() => {
@@ -288,6 +318,7 @@ export default function App() {
         const savedExp = localStorage.getItem('portfolio_exp');
         const savedSkills = localStorage.getItem('portfolio_skills');
         const savedProjects = localStorage.getItem('portfolio_projects');
+        const savedInsights = localStorage.getItem('portfolio_insights');
 
         if (savedHero) setHero(JSON.parse(savedHero));
         if (savedStats) setStats(JSON.parse(savedStats));
@@ -298,6 +329,7 @@ export default function App() {
         if (savedExp) setExperiences(JSON.parse(savedExp));
         if (savedSkills) setSkills(JSON.parse(savedSkills));
         if (savedProjects) setProjects(JSON.parse(savedProjects));
+        if (savedInsights) setInsights(JSON.parse(savedInsights));
       } catch (error) {
         console.error('Failed to load data from localStorage:', error);
       }
@@ -376,6 +408,15 @@ export default function App() {
       }
     });
 
+    // Listen to Insights
+    const unsubInsights = onSnapshot(collection(db, 'users', user.uid, 'insights'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialInsights[0]);
+        setInsights(data);
+        setDraftInsights(data);
+      }
+    });
+
     return () => {
       unsubHero();
       unsubStats();
@@ -385,6 +426,7 @@ export default function App() {
       unsubExperiences();
       unsubSkills();
       unsubProjects();
+      unsubInsights();
     };
   }, [user]);
 
@@ -430,6 +472,7 @@ export default function App() {
     setDraftExperiences(JSON.parse(JSON.stringify(experiences)));
     setDraftSkills([...skills]);
     setDraftProjects(JSON.parse(JSON.stringify(projects)));
+    setDraftInsights(JSON.parse(JSON.stringify(insights)));
     setIsAdminOpen(true);
   };
 
@@ -443,7 +486,37 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === 'string') {
-          callback(reader.result);
+          // Simple compression using canvas
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // Max dimension 800px
+            const maxDim = 800;
+            if (width > height) {
+              if (width > maxDim) {
+                height *= maxDim / width;
+                width = maxDim;
+              }
+            } else {
+              if (height > maxDim) {
+                width *= maxDim / height;
+                height = maxDim;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            // Export as compressed JPEG
+            const compressed = canvas.toDataURL('image/jpeg', 0.7);
+            callback(compressed);
+          };
+          img.src = reader.result;
         }
       };
       reader.readAsDataURL(file);
@@ -490,6 +563,11 @@ export default function App() {
       for (const proj of draftProjects) {
         await setDoc(doc(projCol, proj.title), proj);
       }
+
+      const insightCol = collection(db, 'users', user.uid, 'insights');
+      for (const insight of draftInsights) {
+        await setDoc(doc(insightCol, insight.id), insight);
+      }
     } catch (error) {
       console.error("Save error:", error);
       throw error;
@@ -506,16 +584,30 @@ export default function App() {
     setExperiences(draftExperiences);
     setSkills(draftSkills);
     setProjects(draftProjects);
+    setInsights(draftInsights);
     
-    localStorage.setItem('portfolio_hero', JSON.stringify(draftHero));
-    localStorage.setItem('portfolio_stats', JSON.stringify(draftStats));
-    localStorage.setItem('portfolio_best', JSON.stringify(draftBestCampaigns));
-    localStorage.setItem('portfolio_snap', JSON.stringify(draftSnapchatCampaigns));
-    localStorage.setItem('portfolio_google', JSON.stringify(draftGoogleAdsCampaigns));
-    localStorage.setItem('portfolio_tiktok', JSON.stringify(draftTiktokCampaigns));
-    localStorage.setItem('portfolio_exp', JSON.stringify(draftExperiences));
-    localStorage.setItem('portfolio_skills', JSON.stringify(draftSkills));
-    localStorage.setItem('portfolio_projects', JSON.stringify(draftProjects));
+    const safeSave = (key: string, data: any) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (e) {
+        if (e instanceof DOMException && (e.code === 22 || e.code === 1014 || e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+          console.warn(`LocalStorage quota exceeded for ${key}. Data will only be saved to cloud.`);
+        } else {
+          console.error(`Error saving ${key} to localStorage:`, e);
+        }
+      }
+    };
+
+    safeSave('portfolio_hero', draftHero);
+    safeSave('portfolio_stats', draftStats);
+    safeSave('portfolio_best', draftBestCampaigns);
+    safeSave('portfolio_snap', draftSnapchatCampaigns);
+    safeSave('portfolio_google', draftGoogleAdsCampaigns);
+    safeSave('portfolio_tiktok', draftTiktokCampaigns);
+    safeSave('portfolio_exp', draftExperiences);
+    safeSave('portfolio_skills', draftSkills);
+    safeSave('portfolio_projects', draftProjects);
+    safeSave('portfolio_insights', draftInsights);
 
     if (user) {
       try {
@@ -612,33 +704,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen selection:bg-black selection:text-white">
-      {/* Auth Controls */}
-      <div className="fixed top-6 right-6 z-[60] flex items-center gap-4">
-        {isAuthReady && (
-          user ? (
-            <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md border border-black/10 px-4 py-2 rounded-full shadow-lg">
-              <div className="flex items-center gap-2">
-                {user.photoURL && <img src={user.photoURL} alt={user.displayName || ''} className="w-6 h-6 rounded-full" />}
-                <span className="text-[10px] font-bold uppercase tracking-widest">{user.displayName}</span>
-              </div>
-              <button 
-                onClick={handleSignOut}
-                className="text-[10px] font-bold uppercase tracking-widest hover:opacity-50 transition-opacity"
-              >
-                Sign Out
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={handleSignIn}
-              className="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
-            >
-              Sign In with Google
-            </button>
-          )
-        )}
-      </div>
-
       {/* Admin Toggle */}
       {showAdminButton && (
         <button 
@@ -744,7 +809,7 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-full max-w-2xl bg-[var(--color-brand-bg)] h-full shadow-2xl overflow-y-auto p-8 border-l border-black/10"
+              className="w-full sm:max-w-2xl bg-[var(--color-brand-bg)] h-full shadow-2xl overflow-y-auto p-4 sm:p-8 border-l border-black/10"
             >
               <div className="flex items-center justify-between mb-12">
                 <h2 className="text-3xl font-bold tracking-tighter">Management Panel</h2>
@@ -802,13 +867,41 @@ export default function App() {
                 )}
               </AnimatePresence>
 
-              {/* Hero Management */}
+              {/* Profile & Hero Management */}
               <div className="mb-12">
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
-                  <User size={14} /> Hero Section
+                  <User size={14} /> Profile & Hero Section
                 </h3>
-                <div className="space-y-4 p-6 border border-black/10 bg-white/50 rounded-xl">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6 p-6 border border-black/10 bg-white/50 rounded-xl">
+                  {/* Profile Image - Moved to top and made more prominent */}
+                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-black/5 rounded-2xl bg-black/[0.02]">
+                    <div className="relative group">
+                      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gray-100 flex items-center justify-center">
+                        {draftHero.image ? (
+                          <img src={draftHero.image} alt="Profile Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={48} className="text-black/20" />
+                        )}
+                      </div>
+                      <label className="absolute bottom-0 right-0 p-2 bg-black text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform">
+                        <Camera size={18} />
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => handleImageUpload(e, (base64) => {
+                            setDraftHero({...draftHero, image: base64});
+                          })}
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-4 text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Profile Picture</p>
+                      <p className="text-[9px] opacity-30 mt-1">Recommended: Square image, max 1MB</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase opacity-30">Title</label>
                       <input 
@@ -842,35 +935,7 @@ export default function App() {
                       className="w-full bg-transparent border border-black/5 p-2 text-sm h-24"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase opacity-30">Profile Image</label>
-                    <div className="flex gap-2">
-                      <input 
-                        value={draftHero.image || ''} 
-                        onChange={(e) => setDraftHero({...draftHero, image: e.target.value})}
-                        className="bg-transparent border-b border-black/10 py-1 text-xs flex-1"
-                        placeholder="Image URL"
-                      />
-                      <label className="cursor-pointer p-2 border border-black/10 rounded-lg hover:bg-black/5 transition-colors flex items-center gap-2 text-[10px] font-bold uppercase">
-                        <Upload size={14} />
-                        Upload
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => handleImageUpload(e, (base64) => {
-                            setDraftHero({...draftHero, image: base64});
-                          })}
-                        />
-                      </label>
-                    </div>
-                    {draftHero.image && (
-                      <div className="mt-2 relative w-20 h-20 rounded-full overflow-hidden border border-black/5">
-                        <img src={draftHero.image} alt="Preview" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase opacity-30">Location</label>
                       <input 
@@ -899,7 +964,7 @@ export default function App() {
                 <div className="space-y-4">
                   {(draftStats || []).map((stat, i) => (
                     <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-start">
-                      <div className="flex-1 grid grid-cols-2 gap-4">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input 
                           value={stat.label} 
                           onChange={(e) => {
@@ -964,7 +1029,7 @@ export default function App() {
                           <Trash2 size={16} />
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold uppercase opacity-30">Conversions</label>
                           <input 
@@ -1114,7 +1179,7 @@ export default function App() {
                   <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                     {(draftSnapchatCampaigns || []).map((campaign, i) => (
                       <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-center">
-                        <div className="flex-1 grid grid-cols-3 gap-2">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <input 
                             value={campaign.name} 
                             onChange={(e) => {
@@ -1215,7 +1280,7 @@ export default function App() {
                   <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                     {(draftGoogleAdsCampaigns || []).map((campaign, i) => (
                       <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-center">
-                        <div className="flex-1 grid grid-cols-3 gap-2">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <input 
                             value={campaign.name} 
                             onChange={(e) => {
@@ -1334,7 +1399,7 @@ export default function App() {
                             <Trash2 size={14} />
                           </button>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <div className="space-y-1">
                             <label className="text-[8px] font-bold uppercase opacity-30">Spent ($)</label>
                             <input 
@@ -1479,7 +1544,7 @@ export default function App() {
                   {(draftExperiences || []).map((exp, i) => (
                     <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
                       <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1 grid grid-cols-2 gap-4">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <input 
                             value={exp.role} 
                             onChange={(e) => {
@@ -1594,7 +1659,7 @@ export default function App() {
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
                   <Zap size={14} /> Skills
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {(draftSkills || []).map((skill, i) => (
                     <div key={i} className="p-2 border border-black/10 bg-white/50 rounded flex justify-between items-center">
                       <input 
@@ -1619,6 +1684,121 @@ export default function App() {
                     className="p-2 border border-dashed border-black/20 rounded flex items-center justify-center opacity-40 hover:opacity-100"
                   >
                     <Plus size={12} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Insights Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <TrendingUp size={14} /> Campaign Insights
+                </h3>
+                <div className="space-y-4">
+                  {(draftInsights || []).map((insight, i) => (
+                    <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 space-y-2">
+                          <input 
+                            value={insight.title} 
+                            onChange={(e) => {
+                              const newInsights = [...draftInsights];
+                              newInsights[i].title = e.target.value;
+                              setDraftInsights(newInsights);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 font-bold"
+                            placeholder="Campaign Title"
+                          />
+                          <input 
+                            value={insight.market} 
+                            onChange={(e) => {
+                              const newInsights = [...draftInsights];
+                              newInsights[i].market = e.target.value;
+                              setDraftInsights(newInsights);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-xs opacity-60"
+                            placeholder="Market/Focus"
+                          />
+                        </div>
+                        <button 
+                          onClick={() => setDraftInsights(draftInsights.filter((_, idx) => idx !== i))}
+                          className="text-black/20 hover:text-red-500 transition-colors ml-4"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {insight.metrics.map((metric, j) => (
+                          <div key={j} className="space-y-1">
+                            <input 
+                              value={metric.label} 
+                              onChange={(e) => {
+                                const newInsights = [...draftInsights];
+                                newInsights[i].metrics[j].label = e.target.value;
+                                setDraftInsights(newInsights);
+                              }}
+                              className="w-full bg-transparent border-b border-black/5 text-[10px] uppercase opacity-40"
+                              placeholder="Metric Label"
+                            />
+                            <input 
+                              value={metric.value} 
+                              onChange={(e) => {
+                                const newInsights = [...draftInsights];
+                                newInsights[i].metrics[j].value = e.target.value;
+                                setDraftInsights(newInsights);
+                              }}
+                              className="w-full bg-transparent border-b border-black/10 py-1 font-bold text-sm"
+                              placeholder="Value"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      <textarea 
+                        value={insight.description} 
+                        onChange={(e) => {
+                          const newInsights = [...draftInsights];
+                          newInsights[i].description = e.target.value;
+                          setDraftInsights(newInsights);
+                        }}
+                        className="w-full bg-transparent border border-black/5 p-2 text-sm h-20"
+                        placeholder="Description"
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Icon (Lucide Name)</label>
+                          <input 
+                            value={insight.icon} 
+                            onChange={(e) => {
+                              const newInsights = [...draftInsights];
+                              newInsights[i].icon = e.target.value;
+                              setDraftInsights(newInsights);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Accent Color</label>
+                          <input 
+                            type="color"
+                            value={insight.color} 
+                            onChange={(e) => {
+                              const newInsights = [...draftInsights];
+                              newInsights[i].color = e.target.value;
+                              setDraftInsights(newInsights);
+                            }}
+                            className="w-full h-8 bg-transparent border-none p-0 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => setDraftInsights([...draftInsights, { id: Date.now().toString(), title: 'New Insight', market: 'New Market', metrics: [{ label: 'Metric 1', value: '0' }, { label: 'Metric 2', value: '0' }], description: '', icon: 'TrendingUp', color: '#000000' }])}
+                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
+                  >
+                    <Plus size={16} /> Add Insight
                   </button>
                 </div>
               </div>
@@ -2105,57 +2285,36 @@ export default function App() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-8 border border-white/10 rounded-2xl bg-white/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-full bg-[#fffc00] flex items-center justify-center">
-                    <Smartphone className="text-black" size={20} />
+              {(insights || []).map((insight, i) => {
+                const Icon = IconMap[insight.icon] || TrendingUp;
+                return (
+                  <div key={i} className="p-8 border border-white/10 rounded-2xl bg-white/5">
+                    <div className="flex items-center gap-3 mb-8">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: insight.color }}
+                      >
+                        <Icon className="text-black" size={20} />
+                      </div>
+                      <div>
+                        <div className="font-bold">{insight.title}</div>
+                        <div className="text-xs opacity-50 uppercase tracking-widest">{insight.market}</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      {insight.metrics.map((metric, j) => (
+                        <div key={j} className="p-4 bg-white/5 rounded-xl">
+                          <div className="text-2xl font-bold">{metric.value}</div>
+                          <div className="text-[10px] uppercase opacity-40">{metric.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-sm text-white/60 leading-relaxed">
+                      {insight.description}
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold">Snapchat Sales Campaign</div>
-                    <div className="text-xs opacity-50 uppercase tracking-widest">Saudi Arabia Market</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl font-bold">1.94%</div>
-                    <div className="text-[10px] uppercase opacity-40">Click Rate</div>
-                  </div>
-                  <div className="p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl font-bold">$0.22</div>
-                    <div className="text-[10px] uppercase opacity-40">ECPC</div>
-                  </div>
-                </div>
-                <div className="text-sm text-white/60 leading-relaxed">
-                  Achieved 100% female audience penetration with iOS-exclusive targeting, 
-                  resulting in high-quality traffic for luxury and beauty segments.
-                </div>
-              </div>
-
-              <div className="p-8 border border-white/10 rounded-2xl bg-white/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-full bg-[#00f2ea] flex items-center justify-center">
-                    <BarChart3 className="text-black" size={20} />
-                  </div>
-                  <div>
-                    <div className="font-bold">TikTok Conversion Ads</div>
-                    <div className="text-xs opacity-50 uppercase tracking-widest">E-commerce Focus</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl font-bold">244K+</div>
-                    <div className="text-[10px] uppercase opacity-40">Impressions</div>
-                  </div>
-                  <div className="p-4 bg-white/5 rounded-xl">
-                    <div className="text-2xl font-bold">SAR 0.19</div>
-                    <div className="text-[10px] uppercase opacity-40">CPC (Destination)</div>
-                  </div>
-                </div>
-                <div className="text-sm text-white/60 leading-relaxed">
-                  Optimized ad structures to maintain low CPMs while scaling reach, 
-                  delivering over 2,600+ high-intent clicks within targeted budget windows.
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
         </section>

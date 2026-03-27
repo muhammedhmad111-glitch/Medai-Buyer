@@ -79,6 +79,21 @@
         "tags": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["title", "description"]
+    },
+    "Insight": {
+      "title": "Campaign Insight",
+      "description": "A detailed performance insight for a campaign.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "market": { "type": "string" },
+        "metrics": { "type": "array", "items": { "type": "object", "properties": { "label": { "type": "string" }, "value": { "type": "string" } } } },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["title", "market", "description"]
     }
   },
   "firestore": {
@@ -89,6 +104,7 @@
     "/campaigns/tiktok": { "schema": "Campaign", "description": "TikTok campaign data." },
     "/experiences": { "schema": "Experience", "description": "Collection of work experiences." },
     "/skills": { "schema": "Skill", "description": "Collection of professional skills." },
-    "/projects": { "schema": "Project", "description": "Collection of portfolio projects." }
+    "/projects": { "schema": "Project", "description": "Collection of portfolio projects." },
+    "/insights": { "schema": "Insight", "description": "Collection of campaign performance insights." }
   }
 }
