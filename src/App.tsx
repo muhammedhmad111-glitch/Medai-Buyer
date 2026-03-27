@@ -25,7 +25,8 @@ import {
   Settings,
   X,
   Save,
-  Upload
+  Upload,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import emailjs from '@emailjs/browser';
@@ -53,11 +54,53 @@ const IconMap: Record<string, React.ElementType> = {
   Save
 };
 
+const initialHero = {
+  title: 'DATA-BACKED',
+  subtitle: 'GROWTH',
+  suffix: 'STRATEGIES.',
+  description: 'Results-driven Media Buyer with hands-on experience in planning, launching, and optimizing paid advertising campaigns across Meta, Snapchat, TikTok, and Google Ads.',
+  location: 'Egypt',
+  workMode: 'Remote'
+};
+
 const initialStats = [
-  { label: 'Total Impressions', value: '244K+', sub: 'TikTok Campaigns', icon: 'Globe' },
-  { label: 'Avg. Click Rate', value: '1.94%', sub: 'Snapchat Engagement', icon: 'MousePointer2' },
-  { label: 'Targeting Precision', value: '100%', sub: 'Female/iOS Segments', icon: 'Target' },
-  { label: 'Budget Managed', value: '$5K+', sub: 'Monthly Scaling', icon: 'TrendingUp' },
+  { label: 'Total Impressions', value: '689K+', sub: 'Aggregated Campaigns', icon: 'Globe' },
+  { label: 'Total Conversions', value: '35K+', sub: 'High-Intent Actions', icon: 'Target' },
+  { label: 'Total Clicks', value: '48K+', sub: 'Traffic & Engagement', icon: 'MousePointer2' },
+  { label: 'Avg. CPC', value: '$0.02', sub: 'Optimized Bidding', icon: 'TrendingUp' },
+];
+
+const bestCampaigns = [
+  { name: 'UGC Strategy', spent: 474.19, cpc: 0.03, cpm: 1.90, impressions: 249262, clicks: 17885, ctr: '7.18%', conversions: 12426, costPerConv: 0.04, convRate: '4.99%' },
+  { name: 'Christmas Special', spent: 60.00, cpc: 0.01, cpm: 1.61, impressions: 37382, clicks: 10469, ctr: '28.01%', conversions: 7558, costPerConv: 0.01, convRate: '20.22%' },
+  { name: 'Traffic 2.0', spent: 100.00, cpc: 0.01, cpm: 2.04, impressions: 48978, clicks: 12864, ctr: '26.26%', conversions: 9161, costPerConv: 0.01, convRate: '18.70%' },
+];
+
+const snapchatCampaigns = [
+  { id: '1', name: 'UGC Ad', status: 'Active', spent: 516.85, result: 1219, type: 'LPV', cost: 0.42, impressions: 76022, clicks: 1913 },
+  { id: '2', name: 'Sales', status: 'Active', spent: 239.76, result: 507, type: 'LPV', cost: 0.47, impressions: 33552, clicks: 852 },
+  { id: '3', name: 'Reel4', status: 'Paused', spent: 165.99, result: 341, type: 'LPV', cost: 0.49, impressions: 26169, clicks: 523 },
+  { id: '4', name: 'Traffic', status: 'Paused', spent: 129.88, result: 684, type: 'Clicks', cost: 0.19, impressions: 26875, clicks: 684 },
+  { id: '5', name: 'Sales', status: 'Paused', spent: 120.00, result: 465, type: 'Clicks', cost: 0.26, impressions: 23396, clicks: 465 },
+  { id: '6', name: 'Sales', status: 'Paused', spent: 75.00, result: 332, type: 'Clicks', cost: 0.23, impressions: 17355, clicks: 332 },
+  { id: '7', name: 'Awareness & Engagement', status: 'Paused', spent: 64.90, result: 401, type: 'Clicks', cost: 0.16, impressions: 12908, clicks: 401 },
+  { id: '8', name: 'Ramdan 1', status: 'Paused', spent: 59.65, result: 77, type: 'LPV', cost: 0.77, impressions: 5164, clicks: 130 },
+  { id: '9', name: 'ramadan 2', status: 'Paused', spent: 59.17, result: 66, type: 'LPV', cost: 0.90, impressions: 6322, clicks: 111 },
+  { id: '10', name: 'Awareness & Engagement', status: 'Paused', spent: 57.91, result: 301, type: 'Clicks', cost: 0.19, impressions: 10743, clicks: 301 },
+  { id: '11', name: 'Sales', status: 'Paused', spent: 40.00, result: 55, type: 'LPV', cost: 0.73, impressions: 4687, clicks: 84 },
+  { id: '12', name: 'Awareness & Engagement', status: 'Paused', spent: 40.00, result: 188, type: 'Clicks', cost: 0.21, impressions: 9562, clicks: 188 },
+  { id: '13', name: 'ABC', status: 'Paused', spent: 23.89, result: 52, type: 'LPV', cost: 0.46, impressions: 3109, clicks: 74 },
+  { id: '14', name: 'Native Traffic', status: 'Paused', spent: 18.91, result: 4, type: 'LPV', cost: 4.73, impressions: 2546, clicks: 39 },
+  { id: '15', name: 'Sales حفله', status: 'Paused', spent: 32.58, result: 35, type: 'LPV', cost: 0.93, impressions: 4703, clicks: 55 },
+  { id: '16', name: 'Traffic', status: 'Paused', spent: 30.00, result: 33, type: 'LPV', cost: 0.91, impressions: 3682, clicks: 50 },
+  { id: '17', name: 'Sales', status: 'Paused', spent: 50.00, result: 228, type: 'Clicks', cost: 0.22, impressions: 9622, clicks: 228 },
+  { id: '18', name: 'الماتش', status: 'Paused', spent: 20.00, result: 13, type: 'LPV', cost: 1.54, impressions: 2850, clicks: 23 },
+  { id: '19', name: 'Sales', status: 'Paused', spent: 67.27, result: 406, type: 'Clicks', cost: 0.17, impressions: 17948, clicks: 406 },
+  { id: '20', name: 'Traffic', status: 'Paused', spent: 39.99, result: 106, type: 'Clicks', cost: 0.38, impressions: 4740, clicks: 106 },
+  { id: '21', name: 'promo', status: 'Paused', spent: 25.00, result: 65, type: 'LPV', cost: 0.38, impressions: 4161, clicks: 97 },
+  { id: '22', name: 'party', status: 'Paused', spent: 25.00, result: 64, type: 'LPV', cost: 0.39, impressions: 4047, clicks: 83 },
+  { id: '23', name: 'vala', status: 'Paused', spent: 40.00, result: 37, type: 'LPV', cost: 1.08, impressions: 4668, clicks: 58 },
+  { id: '24', name: 'Awareness & Engagement', status: 'Paused', spent: 60.00, result: 260, type: 'Clicks', cost: 0.23, impressions: 10483, clicks: 260 },
 ];
 
 const initialExperiences = [
@@ -134,7 +177,10 @@ const initialProjects = [
 ];
 
 export default function App() {
+  const [hero, setHero] = useState(initialHero);
   const [stats, setStats] = useState(initialStats);
+  const [bestCampaignsList, setBestCampaignsList] = useState(bestCampaigns);
+  const [snapchatCampaignsList, setSnapchatCampaignsList] = useState(snapchatCampaigns);
   const [experiences, setExperiences] = useState(initialExperiences);
   const [skills, setSkills] = useState(initialSkills);
   const [projects, setProjects] = useState(initialProjects);
@@ -144,13 +190,19 @@ export default function App() {
   const formRef = useRef<HTMLFormElement>(null);
 
   // Draft states for management panel
+  const [draftHero, setDraftHero] = useState(hero);
   const [draftStats, setDraftStats] = useState(stats);
+  const [draftBestCampaigns, setDraftBestCampaigns] = useState(bestCampaignsList);
+  const [draftSnapchatCampaigns, setDraftSnapchatCampaigns] = useState(snapchatCampaignsList);
   const [draftExperiences, setDraftExperiences] = useState(experiences);
   const [draftSkills, setDraftSkills] = useState(skills);
   const [draftProjects, setDraftProjects] = useState(projects);
 
   const openAdmin = () => {
+    setDraftHero({ ...hero });
     setDraftStats([...stats]);
+    setDraftBestCampaigns(JSON.parse(JSON.stringify(bestCampaignsList)));
+    setDraftSnapchatCampaigns(JSON.parse(JSON.stringify(snapchatCampaignsList)));
     setDraftExperiences(JSON.parse(JSON.stringify(experiences)));
     setDraftSkills([...skills]);
     setDraftProjects(JSON.parse(JSON.stringify(projects)));
@@ -185,6 +237,27 @@ export default function App() {
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      const sheetUrl = import.meta.env.VITE_GOOGLE_SHEET_URL;
+
+      // Send to Google Sheets if URL exists
+      if (sheetUrl) {
+        const formData = new FormData(formRef.current);
+        const data = {
+          name: formData.get('user_name'),
+          email: formData.get('user_email'),
+          message: formData.get('message'),
+          date: new Date().toLocaleString()
+        };
+
+        fetch(sheetUrl, {
+          method: 'POST',
+          mode: 'no-cors', // Google Apps Script requires no-cors for simple POST
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }).catch(err => console.error('Google Sheets Error:', err));
+      }
 
       if (!serviceId || !templateId || !publicKey) {
         console.error('EmailJS environment variables are missing');
@@ -216,12 +289,18 @@ export default function App() {
 
   // Load from localStorage on mount
   useEffect(() => {
+    const savedHero = localStorage.getItem('portfolio_hero');
     const savedStats = localStorage.getItem('portfolio_stats');
+    const savedBest = localStorage.getItem('portfolio_best');
+    const savedSnap = localStorage.getItem('portfolio_snap');
     const savedExp = localStorage.getItem('portfolio_exp');
     const savedSkills = localStorage.getItem('portfolio_skills');
     const savedProjects = localStorage.getItem('portfolio_projects');
 
+    if (savedHero) setHero(JSON.parse(savedHero));
     if (savedStats) setStats(JSON.parse(savedStats));
+    if (savedBest) setBestCampaignsList(JSON.parse(savedBest));
+    if (savedSnap) setSnapchatCampaignsList(JSON.parse(savedSnap));
     if (savedExp) setExperiences(JSON.parse(savedExp));
     if (savedSkills) setSkills(JSON.parse(savedSkills));
     if (savedProjects) setProjects(JSON.parse(savedProjects));
@@ -243,12 +322,18 @@ export default function App() {
   }, []);
 
   const saveToLocal = () => {
+    setHero(draftHero);
     setStats(draftStats);
+    setBestCampaignsList(draftBestCampaigns);
+    setSnapchatCampaignsList(draftSnapchatCampaigns);
     setExperiences(draftExperiences);
     setSkills(draftSkills);
     setProjects(draftProjects);
     
+    localStorage.setItem('portfolio_hero', JSON.stringify(draftHero));
     localStorage.setItem('portfolio_stats', JSON.stringify(draftStats));
+    localStorage.setItem('portfolio_best', JSON.stringify(draftBestCampaigns));
+    localStorage.setItem('portfolio_snap', JSON.stringify(draftSnapchatCampaigns));
     localStorage.setItem('portfolio_exp', JSON.stringify(draftExperiences));
     localStorage.setItem('portfolio_skills', JSON.stringify(draftSkills));
     localStorage.setItem('portfolio_projects', JSON.stringify(draftProjects));
@@ -295,6 +380,67 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Hero Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <User size={14} /> Hero Section
+                </h3>
+                <div className="space-y-4 p-6 border border-black/10 bg-white/50 rounded-xl">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase opacity-30">Title</label>
+                      <input 
+                        value={draftHero.title} 
+                        onChange={(e) => setDraftHero({...draftHero, title: e.target.value})}
+                        className="w-full bg-transparent border-b border-black/10 py-1 font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase opacity-30">Subtitle (Italic)</label>
+                      <input 
+                        value={draftHero.subtitle} 
+                        onChange={(e) => setDraftHero({...draftHero, subtitle: e.target.value})}
+                        className="w-full bg-transparent border-b border-black/10 py-1 font-bold"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase opacity-30">Suffix</label>
+                    <input 
+                      value={draftHero.suffix} 
+                      onChange={(e) => setDraftHero({...draftHero, suffix: e.target.value})}
+                      className="w-full bg-transparent border-b border-black/10 py-1 font-bold"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase opacity-30">Description</label>
+                    <textarea 
+                      value={draftHero.description} 
+                      onChange={(e) => setDraftHero({...draftHero, description: e.target.value})}
+                      className="w-full bg-transparent border border-black/5 p-2 text-sm h-24"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase opacity-30">Location</label>
+                      <input 
+                        value={draftHero.location} 
+                        onChange={(e) => setDraftHero({...draftHero, location: e.target.value})}
+                        className="w-full bg-transparent border-b border-black/10 py-1"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase opacity-30">Work Mode</label>
+                      <input 
+                        value={draftHero.workMode} 
+                        onChange={(e) => setDraftHero({...draftHero, workMode: e.target.value})}
+                        className="w-full bg-transparent border-b border-black/10 py-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Stats Management */}
               <div className="mb-12">
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
@@ -338,6 +484,158 @@ export default function App() {
                     className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
                   >
                     <Plus size={16} /> Add Metric
+                  </button>
+                </div>
+              </div>
+
+              {/* Best Performance Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <Target size={14} /> Best Performance
+                </h3>
+                <div className="space-y-4">
+                  {draftBestCampaigns.map((campaign, i) => (
+                    <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
+                      <div className="flex justify-between">
+                        <input 
+                          value={campaign.name} 
+                          onChange={(e) => {
+                            const newList = [...draftBestCampaigns];
+                            newList[i].name = e.target.value;
+                            setDraftBestCampaigns(newList);
+                          }}
+                          className="bg-transparent border-b border-black/10 py-1 font-bold w-full mr-4"
+                          placeholder="Campaign Name"
+                        />
+                        <button 
+                          onClick={() => setDraftBestCampaigns(draftBestCampaigns.filter((_, idx) => idx !== i))}
+                          className="text-black/20 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Conversions</label>
+                          <input 
+                            type="number"
+                            value={campaign.conversions} 
+                            onChange={(e) => {
+                              const newList = [...draftBestCampaigns];
+                              newList[i].conversions = Number(e.target.value);
+                              setDraftBestCampaigns(newList);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Conv. Rate</label>
+                          <input 
+                            value={campaign.convRate} 
+                            onChange={(e) => {
+                              const newList = [...draftBestCampaigns];
+                              newList[i].convRate = e.target.value;
+                              setDraftBestCampaigns(newList);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Spent</label>
+                          <input 
+                            type="number"
+                            value={campaign.spent} 
+                            onChange={(e) => {
+                              const newList = [...draftBestCampaigns];
+                              newList[i].spent = Number(e.target.value);
+                              setDraftBestCampaigns(newList);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Cost per Conv.</label>
+                          <input 
+                            type="number"
+                            step="0.01"
+                            value={campaign.costPerConv} 
+                            onChange={(e) => {
+                              const newList = [...draftBestCampaigns];
+                              newList[i].costPerConv = Number(e.target.value);
+                              setDraftBestCampaigns(newList);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => setDraftBestCampaigns([...draftBestCampaigns, { name: 'New Campaign', spent: 0, cpc: 0, cpm: 0, impressions: 0, clicks: 0, ctr: '0%', conversions: 0, costPerConv: 0, convRate: '0%' }])}
+                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
+                  >
+                    <Plus size={16} /> Add Best Campaign
+                  </button>
+                </div>
+              </div>
+
+              {/* Snapchat Performance Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <BarChart3 size={14} /> Snapchat Performance
+                </h3>
+                <div className="space-y-4">
+                  <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                    {draftSnapchatCampaigns.map((campaign, i) => (
+                      <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-center">
+                        <div className="flex-1 grid grid-cols-3 gap-2">
+                          <input 
+                            value={campaign.name} 
+                            onChange={(e) => {
+                              const newList = [...draftSnapchatCampaigns];
+                              newList[i].name = e.target.value;
+                              setDraftSnapchatCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs font-bold"
+                            placeholder="Name"
+                          />
+                          <input 
+                            value={campaign.spent} 
+                            type="number"
+                            onChange={(e) => {
+                              const newList = [...draftSnapchatCampaigns];
+                              newList[i].spent = Number(e.target.value);
+                              setDraftSnapchatCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs"
+                            placeholder="Spent"
+                          />
+                          <input 
+                            value={campaign.result} 
+                            type="number"
+                            onChange={(e) => {
+                              const newList = [...draftSnapchatCampaigns];
+                              newList[i].result = Number(e.target.value);
+                              setDraftSnapchatCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs"
+                            placeholder="Result"
+                          />
+                        </div>
+                        <button 
+                          onClick={() => setDraftSnapchatCampaigns(draftSnapchatCampaigns.filter((_, idx) => idx !== i))}
+                          className="text-black/20 hover:text-red-500"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => setDraftSnapchatCampaigns([...draftSnapchatCampaigns, { id: Date.now().toString(), name: 'New', status: 'Paused', spent: 0, result: 0, type: 'LPV', cost: 0, impressions: 0, clicks: 0 }])}
+                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
+                  >
+                    <Plus size={16} /> Add Snapchat Entry
                   </button>
                 </div>
               </div>
@@ -605,22 +903,21 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-8">
-                DATA-BACKED <br />
-                <span className="italic font-serif font-light">GROWTH</span> STRATEGIES.
+              <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-8 uppercase">
+                {hero.title} <br />
+                <span className="italic font-serif font-light">{hero.subtitle}</span> {hero.suffix}
               </h1>
               <p className="max-w-2xl text-xl text-black/60 leading-relaxed mb-12">
-                Results-driven Media Buyer with hands-on experience in planning, launching, and optimizing paid 
-                advertising campaigns across Meta, Snapchat, TikTok, and Google Ads.
+                {hero.description}
               </p>
               <div className="flex flex-wrap gap-4">
                 <a href="#contact" className="px-8 py-4 bg-black text-white rounded-full font-medium hover:bg-black/80 transition-colors flex items-center gap-2">
                   Work with me <ChevronRight size={16} />
                 </a>
                 <div className="px-8 py-4 border border-black/10 rounded-full font-medium flex items-center gap-4">
-                  <span className="flex items-center gap-2 text-sm"><MapPin size={14} /> Egypt</span>
+                  <span className="flex items-center gap-2 text-sm"><MapPin size={14} /> {hero.location}</span>
                   <span className="w-px h-4 bg-black/10"></span>
-                  <span className="flex items-center gap-2 text-sm"><Globe size={14} /> Remote</span>
+                  <span className="flex items-center gap-2 text-sm"><Globe size={14} /> {hero.workMode}</span>
                 </div>
               </div>
             </motion.div>
@@ -628,28 +925,142 @@ export default function App() {
         </section>
 
         {/* Stats Grid */}
-        <section id="results" className="py-12 px-6">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-black/10 border border-black/10">
-            {stats.map((stat, i) => {
-              const Icon = IconMap[stat.icon] || Globe;
-              return (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-[var(--color-brand-bg)] p-8 flex flex-col justify-between aspect-square md:aspect-auto"
-                >
-                  <Icon className="mb-8 text-black/40" size={24} />
-                  <div>
-                    <div className="text-4xl font-bold tracking-tighter mb-1">{stat.value}</div>
-                    <div className="text-xs uppercase tracking-widest font-bold opacity-40">{stat.label}</div>
-                    <div className="text-xs italic font-serif mt-2 opacity-60">{stat.sub}</div>
+        <section id="results" className="py-24 px-6 bg-black text-white">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+              {stats.map((stat, i) => {
+                const Icon = IconMap[stat.icon] || Globe;
+                return (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="p-8 border border-white/10 rounded-3xl hover:bg-white/5 transition-colors"
+                  >
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
+                      <Icon size={24} />
+                    </div>
+                    <div className="text-4xl font-bold tracking-tighter mb-2">{stat.value}</div>
+                    <div className="text-xs font-bold uppercase tracking-widest opacity-40">{stat.label}</div>
+                    <div className="text-[10px] uppercase tracking-widest mt-2 opacity-20">{stat.sub}</div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Best Performance Section */}
+            <div className="mb-32">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-4xl font-bold tracking-tighter mb-4">Best Performance</h2>
+                  <p className="text-white/40 max-w-xl">High-impact campaigns with exceptional conversion rates and cost efficiency across various platforms.</p>
+                </div>
+                <div className="hidden md:block">
+                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    Top Performers
                   </div>
-                </motion.div>
-              );
-            })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {bestCampaignsList.map((campaign, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="p-8 border border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 transition-all group"
+                  >
+                    <div className="flex justify-between items-start mb-8">
+                      <h3 className="text-2xl font-bold tracking-tight">{campaign.name}</h3>
+                      <div className="px-2 py-1 bg-green-500/20 text-green-500 rounded text-[8px] font-bold uppercase tracking-widest">Featured</div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-6 mb-8">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conversions</div>
+                        <div className="text-2xl font-bold">{campaign.conversions.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conv. Rate</div>
+                        <div className="text-2xl font-bold text-green-500">{campaign.convRate}</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t border-white/10">
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-40">Spent</span>
+                        <span className="font-mono">${campaign.spent.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-40">CTR</span>
+                        <span className="font-bold">{campaign.ctr}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-40">Cost per Conv.</span>
+                        <span className="font-bold text-green-500">${campaign.costPerConv}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-40">CPC</span>
+                        <span className="font-mono">${campaign.cpc}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Snapchat Detailed Results */}
+            <div className="mb-24">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-4xl font-bold tracking-tighter mb-4">Snapchat Performance</h2>
+                  <p className="text-white/40 max-w-xl">Detailed breakdown of the last quarter campaigns for Sound & Fog Cafe, demonstrating consistent growth and efficient scaling.</p>
+                </div>
+                <div className="hidden md:block">
+                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    Last Quarter Data
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {snapchatCampaignsList.map((campaign, i) => (
+                      <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                        <td className="py-6 font-medium">{campaign.name}</td>
+                        <td className="py-6">
+                          <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-white/10 text-white/40'}`}>
+                            {campaign.status}
+                          </span>
+                        </td>
+                        <td className="py-6 font-mono text-sm">${campaign.spent.toFixed(2)}</td>
+                        <td className="py-6">
+                          <div className="font-bold">{campaign.result}</div>
+                          <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
+                        </td>
+                        <td className="py-6 font-mono text-sm opacity-60">{campaign.impressions.toLocaleString()}</td>
+                        <td className="py-6 font-bold text-sm">${campaign.cost}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </section>
 

@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_EMAILJS_TEMPLATE_ID: string
   readonly VITE_EMAILJS_PUBLIC_KEY: string
   readonly VITE_ADMIN_SECRET: string
+  readonly VITE_GOOGLE_SHEET_URL: string
 }
 
 interface ImportMeta {
