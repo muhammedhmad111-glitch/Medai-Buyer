@@ -538,7 +538,7 @@ export default function App() {
                   <Globe size={14} /> Key Metrics
                 </h3>
                 <div className="space-y-4">
-                  {draftStats.map((stat, i) => (
+                  {(draftStats || []).map((stat, i) => (
                     <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-start">
                       <div className="flex-1 grid grid-cols-2 gap-4">
                         <input 
@@ -585,7 +585,7 @@ export default function App() {
                   <Target size={14} /> Best Performance
                 </h3>
                 <div className="space-y-4">
-                  {draftBestCampaigns.map((campaign, i) => (
+                  {(draftBestCampaigns || []).map((campaign, i) => (
                     <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
                       <div className="flex justify-between">
                         <input 
@@ -679,7 +679,7 @@ export default function App() {
                 {/* Visual Chart for Snapchat Performance */}
                 <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={draftSnapchatCampaigns.slice(0, 8)}>
+                    <BarChart data={(draftSnapchatCampaigns || []).slice(0, 8)}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                       <XAxis 
                         dataKey="name" 
@@ -720,7 +720,7 @@ export default function App() {
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
                       <Pie
-                        data={draftSnapchatCampaigns.slice(0, 5)}
+                        data={(draftSnapchatCampaigns || []).slice(0, 5)}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -729,7 +729,7 @@ export default function App() {
                         dataKey="spent"
                         nameKey="name"
                       >
-                        {draftSnapchatCampaigns.slice(0, 5).map((_, index) => (
+                        {(draftSnapchatCampaigns || []).slice(0, 5).map((_, index) => (
                           <Cell key={`cell-${index}`} fill={['#000', '#FFFC00', '#333', '#666', '#999'][index % 5]} />
                         ))}
                       </Pie>
@@ -753,7 +753,7 @@ export default function App() {
 
                 <div className="space-y-4">
                   <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
-                    {draftSnapchatCampaigns.map((campaign, i) => (
+                    {(draftSnapchatCampaigns || []).map((campaign, i) => (
                       <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-center">
                         <div className="flex-1 grid grid-cols-3 gap-2">
                           <input 
@@ -813,7 +813,7 @@ export default function App() {
                   <Layers size={14} /> Projects
                 </h3>
                 <div className="space-y-4">
-                  {draftProjects.map((project, i) => (
+                  {(draftProjects || []).map((project, i) => (
                     <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
                       <div className="flex justify-between">
                         <input 
@@ -894,7 +894,7 @@ export default function App() {
                   <BarChart3 size={14} /> Experience
                 </h3>
                 <div className="space-y-6">
-                  {draftExperiences.map((exp, i) => (
+                  {(draftExperiences || []).map((exp, i) => (
                     <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1 grid grid-cols-2 gap-4">
@@ -961,7 +961,7 @@ export default function App() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        {exp.description.map((desc, j) => (
+                        {(exp.description || []).map((desc, j) => (
                           <div key={j} className="flex gap-2">
                             <input 
                               value={desc} 
@@ -1013,7 +1013,7 @@ export default function App() {
                   <Zap size={14} /> Skills
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {draftSkills.map((skill, i) => (
+                  {(draftSkills || []).map((skill, i) => (
                     <div key={i} className="p-2 border border-black/10 bg-white/50 rounded flex justify-between items-center">
                       <input 
                         value={skill.name} 
@@ -1119,7 +1119,7 @@ export default function App() {
         <section id="results" className="py-24 px-6 bg-black text-white">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
-              {stats.map((stat, i) => {
+              {(stats || []).map((stat, i) => {
                 const Icon = IconMap[stat.icon] || Globe;
                 return (
                   <motion.div 
@@ -1156,7 +1156,7 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {bestCampaignsList.map((campaign, i) => (
+                {(bestCampaignsList || []).map((campaign, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
@@ -1173,30 +1173,30 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-6 mb-8">
                       <div>
                         <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conversions</div>
-                        <div className="text-2xl font-bold">{campaign.conversions.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">{(campaign.conversions || 0).toLocaleString()}</div>
                       </div>
                       <div>
                         <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conv. Rate</div>
-                        <div className="text-2xl font-bold text-green-500">{campaign.convRate}</div>
+                        <div className="text-2xl font-bold text-green-500">{campaign.convRate || '0%'}</div>
                       </div>
                     </div>
 
                     <div className="space-y-4 pt-6 border-t border-white/10">
                       <div className="flex justify-between text-sm">
                         <span className="opacity-40">Spent</span>
-                        <span className="font-mono">${campaign.spent.toFixed(2)}</span>
+                        <span className="font-mono">${(campaign.spent || 0).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="opacity-40">CTR</span>
-                        <span className="font-bold">{campaign.ctr}</span>
+                        <span className="font-bold">{campaign.ctr || '0%'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="opacity-40">Cost per Conv.</span>
-                        <span className="font-bold text-green-500">${campaign.costPerConv}</span>
+                        <span className="font-bold text-green-500">${(campaign.costPerConv || 0).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="opacity-40">CPC</span>
-                        <span className="font-mono">${campaign.cpc}</span>
+                        <span className="font-mono">${(campaign.cpc || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -1231,7 +1231,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {snapchatCampaignsList.map((campaign, i) => (
+                    {(snapchatCampaignsList || []).map((campaign, i) => (
                       <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                         <td className="py-6 font-medium">{campaign.name}</td>
                         <td className="py-6">
@@ -1245,7 +1245,7 @@ export default function App() {
                           <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
                         </td>
                         <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
-                        <td className="py-6 font-bold text-sm">${campaign.cost || 0}</td>
+                        <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1272,7 +1272,7 @@ export default function App() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {projects.map((project, i) => (
+              {(projects || []).map((project, i) => (
                 <motion.div 
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
@@ -1293,7 +1293,7 @@ export default function App() {
                   )}
                   <div>
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {project.tags.map((tag, j) => (
+                      {(project.tags || []).map((tag, j) => (
                         <span key={j} className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black/5 rounded">
                           {tag}
                         </span>
@@ -1326,7 +1326,7 @@ export default function App() {
                 </h2>
               </div>
               <div className="md:w-2/3 space-y-24">
-                {experiences.map((exp, i) => (
+                {(experiences || []).map((exp, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, x: 20 }}
@@ -1352,7 +1352,7 @@ export default function App() {
                       {exp.company}
                     </div>
                     <ul className="space-y-4">
-                      {exp.description.map((item, j) => (
+                      {(exp.description || []).map((item, j) => (
                         <li key={j} className="flex gap-4 text-black/70 leading-relaxed">
                           <span className="mt-2 w-1.5 h-1.5 rounded-full bg-black/20 shrink-0" />
                           {item}
@@ -1375,7 +1375,7 @@ export default function App() {
                   Core Expertise
                 </h2>
                 <div className="space-y-2">
-                  {skills.filter(s => s.category === 'Platform').map((skill, i) => (
+                  {(skills || []).filter(s => s.category === 'Platform').map((skill, i) => (
                     <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
                       <span className="font-bold tracking-tight">{skill.name}</span>
                       <Smartphone size={16} className="opacity-40" />
@@ -1388,7 +1388,7 @@ export default function App() {
                   Strategic Skills
                 </h2>
                 <div className="space-y-2">
-                  {skills.filter(s => s.category === 'Skill').map((skill, i) => (
+                  {(skills || []).filter(s => s.category === 'Skill').map((skill, i) => (
                     <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
                       <span className="font-bold tracking-tight">{skill.name}</span>
                       <Zap size={16} className="opacity-40" />
@@ -1401,7 +1401,7 @@ export default function App() {
                   Technical Stack
                 </h2>
                 <div className="space-y-2">
-                  {skills.filter(s => s.category === 'Tool').map((skill, i) => (
+                  {(skills || []).filter(s => s.category === 'Tool').map((skill, i) => (
                     <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
                       <span className="font-bold tracking-tight">{skill.name}</span>
                       <Layers size={16} className="opacity-40" />
