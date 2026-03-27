@@ -139,6 +139,7 @@ export default function App() {
   const [skills, setSkills] = useState(initialSkills);
   const [projects, setProjects] = useState(initialProjects);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [showAdminButton, setShowAdminButton] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -224,6 +225,21 @@ export default function App() {
     if (savedExp) setExperiences(JSON.parse(savedExp));
     if (savedSkills) setSkills(JSON.parse(savedSkills));
     if (savedProjects) setProjects(JSON.parse(savedProjects));
+
+    // Admin Access Logic
+    const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessParam = urlParams.get('admin_access');
+    const hasSavedAccess = localStorage.getItem('admin_access_unlocked') === 'true';
+
+    if (hasSavedAccess || (adminSecret && accessParam === adminSecret) || import.meta.env.DEV) {
+      setShowAdminButton(true);
+      if (accessParam === adminSecret) {
+        localStorage.setItem('admin_access_unlocked', 'true');
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
   }, []);
 
   const saveToLocal = () => {
@@ -242,12 +258,14 @@ export default function App() {
   return (
     <div className="min-h-screen selection:bg-black selection:text-white">
       {/* Admin Toggle */}
-      <button 
-        onClick={openAdmin}
-        className="fixed bottom-8 right-8 z-[60] w-14 h-14 bg-black text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
-      >
-        <Settings size={24} />
-      </button>
+      {showAdminButton && (
+        <button 
+          onClick={openAdmin}
+          className="fixed bottom-8 right-8 z-[60] w-14 h-14 bg-black text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
+        >
+          <Settings size={24} />
+        </button>
+      )}
 
       {/* Admin Panel Overlay */}
       <AnimatePresence>
