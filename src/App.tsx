@@ -103,16 +103,16 @@ const initialHero = {
 };
 
 const initialStats = [
-  { label: 'Total Impressions', value: '689K+', sub: 'Aggregated Campaigns', icon: 'Globe' },
-  { label: 'Total Conversions', value: '35K+', sub: 'High-Intent Actions', icon: 'Target' },
-  { label: 'Total Clicks', value: '48K+', sub: 'Traffic & Engagement', icon: 'MousePointer2' },
-  { label: 'Avg. CPC', value: '$0.02', sub: 'Optimized Bidding', icon: 'TrendingUp' },
+  { label: 'Total Impressions', value: '1.58M+', sub: 'Aggregated Campaigns', icon: 'Globe' },
+  { label: 'Total Conversions', value: '0', sub: 'High-Intent Actions', icon: 'Target' },
+  { label: 'Total Clicks', value: '24K+', sub: 'Traffic & Engagement', icon: 'MousePointer2' },
+  { label: 'Avg. CPC', value: '$0.22', sub: 'Optimized Bidding', icon: 'TrendingUp' },
 ];
 
 const bestCampaigns = [
-  { name: 'UGC Strategy', spent: 474.19, cpc: 0.03, cpm: 1.90, impressions: 249262, clicks: 17885, ctr: '7.18%', conversions: 12426, costPerConv: 0.04, convRate: '4.99%' },
-  { name: 'Christmas Special', spent: 60.00, cpc: 0.01, cpm: 1.61, impressions: 37382, clicks: 10469, ctr: '28.01%', conversions: 7558, costPerConv: 0.01, convRate: '20.22%' },
-  { name: 'Traffic 2.0', spent: 100.00, cpc: 0.01, cpm: 2.04, impressions: 48978, clicks: 12864, ctr: '26.26%', conversions: 9161, costPerConv: 0.01, convRate: '18.70%' },
+  { name: 'ugc', spent: 474.19, cpc: 0.03, cpm: 1.90, impressions: 249262, clicks: 17885, ctr: '7.18%', conversions: 12426, costPerConv: 0.04, convRate: '4.99%' },
+  { name: 'chrismas', spent: 60.00, cpc: 0.01, cpm: 1.61, impressions: 37382, clicks: 10469, ctr: '28.01%', conversions: 7558, costPerConv: 0.01, convRate: '20.22%' },
+  { name: 'Traffic20', spent: 100.00, cpc: 0.01, cpm: 2.04, impressions: 48978, clicks: 12864, ctr: '26.26%', conversions: 9161, costPerConv: 0.01, convRate: '18.70%' },
 ];
 
 const snapchatCampaigns = [
@@ -143,16 +143,29 @@ const snapchatCampaigns = [
 ];
 
 const initialGoogleAdsCampaigns = [
-  { id: '1', name: 'Search - Brand Awareness', status: 'Active', spent: 1250.00, result: 850, type: 'Conversions', cost: 1.47, impressions: 15400, clicks: 920 },
-  { id: '2', name: 'Display - Retargeting', status: 'Active', spent: 450.00, result: 120, type: 'Conversions', cost: 3.75, impressions: 45000, clicks: 680 },
-  { id: '3', name: 'YouTube - Product Launch', status: 'Paused', spent: 800.00, result: 2500, type: 'Views', cost: 0.32, impressions: 120000, clicks: 1500 },
-  { id: '4', name: 'Search - Generic Keywords', status: 'Paused', spent: 2100.00, result: 450, type: 'Conversions', cost: 4.67, impressions: 28000, clicks: 1100 },
+  { id: '1', name: 'اول كامبين', status: 'Paused', spent: 299.16, result: 1780, type: 'Clicks', cost: 0.17, impressions: 81400, clicks: 1780 },
+  { id: '2', name: 'ساوند 2', status: 'Active', spent: 2035.61, result: 11498, type: 'Clicks', cost: 0.18, impressions: 864533, clicks: 11498 },
+  { id: '3', name: 'MA7', status: 'Paused', spent: 3147.29, result: 11445, type: 'Clicks', cost: 0.27, impressions: 641165, clicks: 11445 },
 ];
 
 const initialTikTokCampaigns = [
-  { id: '1', name: 'TikTok - Brand Awareness', status: 'Active', spent: 850.00, result: 12500, type: 'Views', cost: 0.06, impressions: 45000, clicks: 1200 },
-  { id: '2', name: 'TikTok - Conversion Funnel', status: 'Active', spent: 600.00, result: 45, type: 'Conversions', cost: 13.33, impressions: 12000, clicks: 350 },
-  { id: '3', name: 'TikTok - App Installs', status: 'Paused', spent: 300.00, result: 150, type: 'Installs', cost: 2.00, impressions: 8500, clicks: 210 },
+  { id: '1', name: 'ugc', status: 'Paused', spent: 474.19, result: 17885, type: 'Clicks', cost: 0.03, impressions: 249262, clicks: 17885 },
+  { id: '2', name: 'chrismas', status: 'Paused', spent: 60.00, result: 10469, type: 'Clicks', cost: 0.01, impressions: 37382, clicks: 10469 },
+  { id: '3', name: 'Traffic20', status: 'Paused', spent: 100.00, result: 12864, type: 'Clicks', cost: 0.01, impressions: 48978, clicks: 12864 },
+  { id: '4', name: 'المبيعات 14', status: 'Paused', spent: 56.79, result: 181, type: 'Clicks', cost: 0.31, impressions: 12688, clicks: 181 },
+  { id: '5', name: 'عرض 25', status: 'Paused', spent: 296.47, result: 1417, type: 'Clicks', cost: 0.21, impressions: 94429, clicks: 1417 },
+  { id: '6', name: 'المبيعات 09', status: 'Paused', spent: 657.76, result: 2545, type: 'Clicks', cost: 0.26, impressions: 248401, clicks: 2545 },
+  { id: '7', name: 'reel 2', status: 'Paused', spent: 400.00, result: 1944, type: 'Clicks', cost: 0.21, impressions: 105749, clicks: 1944 },
+  { id: '8', name: 'reel no', status: 'Paused', spent: 149.96, result: 963, type: 'Clicks', cost: 0.16, impressions: 45366, clicks: 963 },
+  { id: '9', name: 'ramadan', status: 'Paused', spent: 200.00, result: 664, type: 'Clicks', cost: 0.30, impressions: 39522, clicks: 664 },
+  { id: '10', name: 'رمضات 25', status: 'Paused', spent: 300.00, result: 848, type: 'Clicks', cost: 0.35, impressions: 65522, clicks: 848 },
+  { id: '11', name: 'يوم التاسيس', status: 'Paused', spent: 148.41, result: 477, type: 'Clicks', cost: 0.31, impressions: 43108, clicks: 477 },
+  { id: '12', name: 'مصطفي', status: 'Paused', spent: 150.00, result: 464, type: 'Clicks', cost: 0.32, impressions: 55374, clicks: 464 },
+  { id: '13', name: 'mostafa', status: 'Paused', spent: 100.00, result: 356, type: 'Clicks', cost: 0.28, impressions: 29087, clicks: 356 },
+  { id: '14', name: 'valantine', status: 'Paused', spent: 150.00, result: 572, type: 'Clicks', cost: 0.26, impressions: 53913, clicks: 572 },
+  { id: '15', name: 'برومو 59', status: 'Paused', spent: 299.37, result: 1046, type: 'Clicks', cost: 0.29, impressions: 87618, clicks: 1046 },
+  { id: '16', name: 'اليوم الوطني', status: 'Paused', spent: 500.00, result: 1505, type: 'Clicks', cost: 0.33, impressions: 207943, clicks: 1505 },
+  { id: '17', name: 'reel6', status: 'Paused', spent: 500.00, result: 1418, type: 'Clicks', cost: 0.35, impressions: 141878, clicks: 1418 },
 ];
 
 const initialExperiences = [
