@@ -229,7 +229,7 @@ export default function App() {
     if (file) {
       // Check file size (limit to 2MB for localStorage safety)
       if (file.size > 2 * 1024 * 1024) {
-        alert("Image size too large. Please choose an image smaller than 2MB.");
+        console.error("Image size too large. Please choose an image smaller than 2MB.");
         return;
       }
       const reader = new FileReader();
@@ -304,21 +304,25 @@ export default function App() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const savedHero = localStorage.getItem('portfolio_hero');
-    const savedStats = localStorage.getItem('portfolio_stats');
-    const savedBest = localStorage.getItem('portfolio_best');
-    const savedSnap = localStorage.getItem('portfolio_snap');
-    const savedExp = localStorage.getItem('portfolio_exp');
-    const savedSkills = localStorage.getItem('portfolio_skills');
-    const savedProjects = localStorage.getItem('portfolio_projects');
+    try {
+      const savedHero = localStorage.getItem('portfolio_hero');
+      const savedStats = localStorage.getItem('portfolio_stats');
+      const savedBest = localStorage.getItem('portfolio_best');
+      const savedSnap = localStorage.getItem('portfolio_snap');
+      const savedExp = localStorage.getItem('portfolio_exp');
+      const savedSkills = localStorage.getItem('portfolio_skills');
+      const savedProjects = localStorage.getItem('portfolio_projects');
 
-    if (savedHero) setHero(JSON.parse(savedHero));
-    if (savedStats) setStats(JSON.parse(savedStats));
-    if (savedBest) setBestCampaignsList(JSON.parse(savedBest));
-    if (savedSnap) setSnapchatCampaignsList(JSON.parse(savedSnap));
-    if (savedExp) setExperiences(JSON.parse(savedExp));
-    if (savedSkills) setSkills(JSON.parse(savedSkills));
-    if (savedProjects) setProjects(JSON.parse(savedProjects));
+      if (savedHero) setHero(JSON.parse(savedHero));
+      if (savedStats) setStats(JSON.parse(savedStats));
+      if (savedBest) setBestCampaignsList(JSON.parse(savedBest));
+      if (savedSnap) setSnapchatCampaignsList(JSON.parse(savedSnap));
+      if (savedExp) setExperiences(JSON.parse(savedExp));
+      if (savedSkills) setSkills(JSON.parse(savedSkills));
+      if (savedProjects) setProjects(JSON.parse(savedProjects));
+    } catch (error) {
+      console.error('Failed to load data from localStorage:', error);
+    }
 
     // Admin Access Logic
     const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
@@ -1235,13 +1239,13 @@ export default function App() {
                             {campaign.status}
                           </span>
                         </td>
-                        <td className="py-6 font-mono text-sm">${campaign.spent.toFixed(2)}</td>
+                        <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
                         <td className="py-6">
-                          <div className="font-bold">{campaign.result}</div>
+                          <div className="font-bold">{campaign.result || 0}</div>
                           <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
                         </td>
-                        <td className="py-6 font-mono text-sm opacity-60">{campaign.impressions.toLocaleString()}</td>
-                        <td className="py-6 font-bold text-sm">${campaign.cost}</td>
+                        <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
+                        <td className="py-6 font-bold text-sm">${campaign.cost || 0}</td>
                       </tr>
                     ))}
                   </tbody>
