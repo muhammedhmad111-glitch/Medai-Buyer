@@ -30,6 +30,19 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import emailjs from '@emailjs/browser';
+import { 
+  BarChart, 
+  Bar, 
+  PieChart as RechartsPieChart,
+  Pie,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
 
 const IconMap: Record<string, React.ElementType> = {
   TrendingUp, 
@@ -60,7 +73,8 @@ const initialHero = {
   suffix: 'STRATEGIES.',
   description: 'Results-driven Media Buyer with hands-on experience in planning, launching, and optimizing paid advertising campaigns across Meta, Snapchat, TikTok, and Google Ads.',
   location: 'Egypt',
-  workMode: 'Remote'
+  workMode: 'Remote',
+  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=400&auto=format&fit=crop'
 };
 
 const initialStats = [
@@ -186,6 +200,7 @@ export default function App() {
   const [projects, setProjects] = useState(initialProjects);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [showAdminButton, setShowAdminButton] = useState(false);
+  const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -371,7 +386,7 @@ export default function App() {
               <div className="flex items-center justify-between mb-12">
                 <h2 className="text-3xl font-bold tracking-tighter">Management Panel</h2>
                 <div className="flex gap-4">
-                  <button onClick={saveToLocal} className="p-3 bg-black text-white rounded-full hover:bg-black/80 transition-colors">
+                  <button onClick={() => setIsConfirmingSave(true)} className="p-3 bg-black text-white rounded-full hover:bg-black/80 transition-colors">
                     <Save size={20} />
                   </button>
                   <button onClick={() => setIsAdminOpen(false)} className="p-3 border border-black/10 rounded-full hover:bg-black/5 transition-colors">
@@ -379,6 +394,50 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Confirmation Dialog */}
+              <AnimatePresence>
+                {isConfirmingSave && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-md flex items-center justify-center p-6"
+                  >
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-white p-8 rounded-3xl max-w-sm w-full shadow-2xl text-center"
+                    >
+                      <div className="w-16 h-16 bg-black/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Save size={32} className="text-black" />
+                      </div>
+                      <h3 className="text-2xl font-bold tracking-tight mb-4">Save Changes?</h3>
+                      <p className="text-black/60 mb-8">
+                        Are you sure you want to save these changes?
+                      </p>
+                      <div className="flex gap-4">
+                        <button 
+                          onClick={() => setIsConfirmingSave(false)}
+                          className="flex-1 py-4 border border-black/10 rounded-xl font-bold uppercase tracking-widest hover:bg-black/5 transition-all"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={() => {
+                            saveToLocal();
+                            setIsConfirmingSave(false);
+                          }}
+                          className="flex-1 py-4 bg-black text-white rounded-xl font-bold uppercase tracking-widest hover:bg-black/80 transition-all shadow-lg"
+                        >
+                          Confirm
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Hero Management */}
               <div className="mb-12">
@@ -419,6 +478,34 @@ export default function App() {
                       onChange={(e) => setDraftHero({...draftHero, description: e.target.value})}
                       className="w-full bg-transparent border border-black/5 p-2 text-sm h-24"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase opacity-30">Profile Image</label>
+                    <div className="flex gap-2">
+                      <input 
+                        value={draftHero.image || ''} 
+                        onChange={(e) => setDraftHero({...draftHero, image: e.target.value})}
+                        className="bg-transparent border-b border-black/10 py-1 text-xs flex-1"
+                        placeholder="Image URL"
+                      />
+                      <label className="cursor-pointer p-2 border border-black/10 rounded-lg hover:bg-black/5 transition-colors flex items-center gap-2 text-[10px] font-bold uppercase">
+                        <Upload size={14} />
+                        Upload
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => handleImageUpload(e, (base64) => {
+                            setDraftHero({...draftHero, image: base64});
+                          })}
+                        />
+                      </label>
+                    </div>
+                    {draftHero.image && (
+                      <div className="mt-2 relative w-20 h-20 rounded-full overflow-hidden border border-black/5">
+                        <img src={draftHero.image} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -584,6 +671,82 @@ export default function App() {
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
                   <BarChart3 size={14} /> Snapchat Performance
                 </h3>
+                
+                {/* Visual Chart for Snapchat Performance */}
+                <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={draftSnapchatCampaigns.slice(0, 8)}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                      <XAxis 
+                        dataKey="name" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tick={{ fill: 'rgba(0,0,0,0.4)' }}
+                      />
+                      <YAxis 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tick={{ fill: 'rgba(0,0,0,0.4)' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          borderRadius: '12px', 
+                          border: '1px solid rgba(0,0,0,0.1)',
+                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="top" 
+                        align="right" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em', paddingBottom: '20px' }}
+                      />
+                      <Bar dataKey="spent" name="Spent ($)" fill="#000" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="result" name="Results" fill="#FFFC00" stroke="#000" strokeWidth={1} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p className="text-[10px] text-center mt-2 opacity-30 font-bold uppercase tracking-widest">Spent vs Results (Top 8)</p>
+                </div>
+
+                <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-4 text-center">Spend Distribution</h4>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={draftSnapchatCampaigns.slice(0, 5)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="spent"
+                        nameKey="name"
+                      >
+                        {draftSnapchatCampaigns.slice(0, 5).map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={['#000', '#FFFC00', '#333', '#666', '#999'][index % 5]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          borderRadius: '12px', 
+                          border: '1px solid rgba(0,0,0,0.1)',
+                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        align="center" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em', paddingTop: '20px' }}
+                      />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+
                 <div className="space-y-4">
                   <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
                     {draftSnapchatCampaigns.map((campaign, i) => (
@@ -898,29 +1061,53 @@ export default function App() {
         {/* Hero Section */}
         <section className="pt-24 pb-12 px-6">
           <div className="max-w-7xl mx-auto">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-8 uppercase">
-                {hero.title} <br />
-                <span className="italic font-serif font-light">{hero.subtitle}</span> {hero.suffix}
-              </h1>
-              <p className="max-w-2xl text-xl text-black/60 leading-relaxed mb-12">
-                {hero.description}
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <a href="#contact" className="px-8 py-4 bg-black text-white rounded-full font-medium hover:bg-black/80 transition-colors flex items-center gap-2">
-                  Work with me <ChevronRight size={16} />
-                </a>
-                <div className="px-8 py-4 border border-black/10 rounded-full font-medium flex items-center gap-4">
-                  <span className="flex items-center gap-2 text-sm"><MapPin size={14} /> {hero.location}</span>
-                  <span className="w-px h-4 bg-black/10"></span>
-                  <span className="flex items-center gap-2 text-sm"><Globe size={14} /> {hero.workMode}</span>
+            <div className="flex flex-col md:flex-row gap-12 items-center">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                className="md:w-2/3"
+              >
+                <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-8 uppercase">
+                  {hero.title} <br />
+                  <span className="italic font-serif font-light">{hero.subtitle}</span> {hero.suffix}
+                </h1>
+                <p className="max-w-2xl text-xl text-black/60 leading-relaxed mb-12">
+                  {hero.description}
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <a href="#contact" className="px-8 py-4 bg-black text-white rounded-full font-medium hover:bg-black/80 transition-colors flex items-center gap-2">
+                    Work with me <ChevronRight size={16} />
+                  </a>
+                  <div className="px-8 py-4 border border-black/10 rounded-full font-medium flex items-center gap-4">
+                    <span className="flex items-center gap-2 text-sm"><MapPin size={14} /> {hero.location}</span>
+                    <span className="w-px h-4 bg-black/10"></span>
+                    <span className="flex items-center gap-2 text-sm"><Globe size={14} /> {hero.workMode}</span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+              
+              {hero.image && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="md:w-1/3 relative"
+                >
+                  <div className="aspect-square rounded-full overflow-hidden border-8 border-white shadow-2xl relative z-10">
+                    <img 
+                      src={hero.image} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  {/* Decorative elements */}
+                  <div className="absolute -top-4 -right-4 w-24 h-24 bg-[#FFFC00] rounded-full -z-0 blur-2xl opacity-50" />
+                  <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-black/5 rounded-full -z-0 blur-xl" />
+                </motion.div>
+              )}
+            </div>
           </div>
         </section>
 
