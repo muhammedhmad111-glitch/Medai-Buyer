@@ -26,7 +26,13 @@ import {
   X,
   Save,
   Upload,
-  User
+  User,
+  LogOut,
+  LogIn,
+  Brain,
+  MessageSquare,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import emailjs from '@emailjs/browser';
@@ -43,6 +49,24 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { 
+  auth, 
+  db, 
+  googleProvider, 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged, 
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  onSnapshot, 
+  query, 
+  where,
+  type User as FirebaseUser
+} from './firebase';
 
 const IconMap: Record<string, React.ElementType> = {
   TrendingUp, 
@@ -74,7 +98,7 @@ const initialHero = {
   description: 'Results-driven Media Buyer with hands-on experience in planning, launching, and optimizing paid advertising campaigns across Meta, Snapchat, TikTok, and Google Ads.',
   location: 'Egypt',
   workMode: 'Remote',
-  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=400&auto=format&fit=crop'
+  image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=400&h=400&auto=format&fit=crop'
 };
 
 const initialStats = [
@@ -115,6 +139,19 @@ const snapchatCampaigns = [
   { id: '22', name: 'party', status: 'Paused', spent: 25.00, result: 64, type: 'LPV', cost: 0.39, impressions: 4047, clicks: 83 },
   { id: '23', name: 'vala', status: 'Paused', spent: 40.00, result: 37, type: 'LPV', cost: 1.08, impressions: 4668, clicks: 58 },
   { id: '24', name: 'Awareness & Engagement', status: 'Paused', spent: 60.00, result: 260, type: 'Clicks', cost: 0.23, impressions: 10483, clicks: 260 },
+];
+
+const initialGoogleAdsCampaigns = [
+  { id: '1', name: 'Search - Brand Awareness', status: 'Active', spent: 1250.00, result: 850, type: 'Conversions', cost: 1.47, impressions: 15400, clicks: 920 },
+  { id: '2', name: 'Display - Retargeting', status: 'Active', spent: 450.00, result: 120, type: 'Conversions', cost: 3.75, impressions: 45000, clicks: 680 },
+  { id: '3', name: 'YouTube - Product Launch', status: 'Paused', spent: 800.00, result: 2500, type: 'Views', cost: 0.32, impressions: 120000, clicks: 1500 },
+  { id: '4', name: 'Search - Generic Keywords', status: 'Paused', spent: 2100.00, result: 450, type: 'Conversions', cost: 4.67, impressions: 28000, clicks: 1100 },
+];
+
+const initialTikTokCampaigns = [
+  { id: '1', name: 'TikTok - Brand Awareness', status: 'Active', spent: 850.00, result: 12500, type: 'Views', cost: 0.06, impressions: 45000, clicks: 1200 },
+  { id: '2', name: 'TikTok - Conversion Funnel', status: 'Active', spent: 600.00, result: 45, type: 'Conversions', cost: 13.33, impressions: 12000, clicks: 350 },
+  { id: '3', name: 'TikTok - App Installs', status: 'Paused', spent: 300.00, result: 150, type: 'Installs', cost: 2.00, impressions: 8500, clicks: 210 },
 ];
 
 const initialExperiences = [
@@ -191,33 +228,205 @@ const initialProjects = [
 ];
 
 export default function App() {
-  const [hero, setHero] = useState(initialHero);
-  const [stats, setStats] = useState(initialStats);
-  const [bestCampaignsList, setBestCampaignsList] = useState(bestCampaigns);
-  const [snapchatCampaignsList, setSnapchatCampaignsList] = useState(snapchatCampaigns);
-  const [experiences, setExperiences] = useState(initialExperiences);
-  const [skills, setSkills] = useState(initialSkills);
-  const [projects, setProjects] = useState(initialProjects);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [showAdminButton, setShowAdminButton] = useState(false);
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const formRef = useRef<HTMLFormElement>(null);
+  
+  // AI Assistant State
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [aiMessage, setAiMessage] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [highThinkingMode, setHighThinkingMode] = useState(false);
 
-  // Draft states for management panel
+  // Portfolio State
+  const [hero, setHero] = useState(initialHero);
+  const [stats, setStats] = useState(initialStats);
+  const [bestCampaignsList, setBestCampaignsList] = useState(bestCampaigns);
+  const [snapchatCampaignsList, setSnapchatCampaignsList] = useState(snapchatCampaigns);
+  const [googleAdsCampaignsList, setGoogleAdsCampaignsList] = useState(initialGoogleAdsCampaigns);
+  const [tiktokCampaignsList, setTiktokCampaignsList] = useState(initialTikTokCampaigns);
+  const [experiences, setExperiences] = useState(initialExperiences);
+  const [skills, setSkills] = useState(initialSkills);
+  const [projects, setProjects] = useState(initialProjects);
+
+  // Draft States for Admin
   const [draftHero, setDraftHero] = useState(hero);
   const [draftStats, setDraftStats] = useState(stats);
   const [draftBestCampaigns, setDraftBestCampaigns] = useState(bestCampaignsList);
   const [draftSnapchatCampaigns, setDraftSnapchatCampaigns] = useState(snapchatCampaignsList);
+  const [draftGoogleAdsCampaigns, setDraftGoogleAdsCampaigns] = useState(googleAdsCampaignsList);
+  const [draftTiktokCampaigns, setDraftTiktokCampaigns] = useState(tiktokCampaignsList);
   const [draftExperiences, setDraftExperiences] = useState(experiences);
   const [draftSkills, setDraftSkills] = useState(skills);
   const [draftProjects, setDraftProjects] = useState(projects);
+
+  // Firebase Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Sync with Firestore when user is logged in
+  useEffect(() => {
+    if (!user) {
+      // Load from localStorage if not logged in
+      try {
+        const savedHero = localStorage.getItem('portfolio_hero');
+        const savedStats = localStorage.getItem('portfolio_stats');
+        const savedBest = localStorage.getItem('portfolio_best');
+        const savedSnap = localStorage.getItem('portfolio_snap');
+        const savedGoogle = localStorage.getItem('portfolio_google');
+        const savedTiktok = localStorage.getItem('portfolio_tiktok');
+        const savedExp = localStorage.getItem('portfolio_exp');
+        const savedSkills = localStorage.getItem('portfolio_skills');
+        const savedProjects = localStorage.getItem('portfolio_projects');
+
+        if (savedHero) setHero(JSON.parse(savedHero));
+        if (savedStats) setStats(JSON.parse(savedStats));
+        if (savedBest) setBestCampaignsList(JSON.parse(savedBest));
+        if (savedSnap) setSnapchatCampaignsList(JSON.parse(savedSnap));
+        if (savedGoogle) setGoogleAdsCampaignsList(JSON.parse(savedGoogle));
+        if (savedTiktok) setTiktokCampaignsList(JSON.parse(savedTiktok));
+        if (savedExp) setExperiences(JSON.parse(savedExp));
+        if (savedSkills) setSkills(JSON.parse(savedSkills));
+        if (savedProjects) setProjects(JSON.parse(savedProjects));
+      } catch (error) {
+        console.error('Failed to load data from localStorage:', error);
+      }
+      return;
+    }
+
+    // Listen to Hero
+    const unsubHero = onSnapshot(doc(db, 'users', user.uid, 'settings', 'hero'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as typeof initialHero;
+        setHero(data);
+        setDraftHero(data);
+      }
+    });
+
+    // Listen to Stats
+    const unsubStats = onSnapshot(collection(db, 'users', user.uid, 'stats'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialStats[0]);
+        setStats(data);
+        setDraftStats(data);
+      }
+    });
+
+    // Listen to Snapchat
+    const unsubSnapchat = onSnapshot(collection(db, 'users', user.uid, 'campaigns_snapchat'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof snapchatCampaigns[0]);
+        setSnapchatCampaignsList(data);
+        setDraftSnapchatCampaigns(data);
+      }
+    });
+
+    // Listen to Google Ads
+    const unsubGoogleAds = onSnapshot(collection(db, 'users', user.uid, 'campaigns_google_ads'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialGoogleAdsCampaigns[0]);
+        setGoogleAdsCampaignsList(data);
+        setDraftGoogleAdsCampaigns(data);
+      }
+    });
+
+    // Listen to TikTok
+    const unsubTikTok = onSnapshot(collection(db, 'users', user.uid, 'campaigns_tiktok'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialTikTokCampaigns[0]);
+        setTiktokCampaignsList(data);
+        setDraftTiktokCampaigns(data);
+      }
+    });
+
+    // Listen to Experiences
+    const unsubExperiences = onSnapshot(collection(db, 'users', user.uid, 'experiences'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialExperiences[0]);
+        setExperiences(data);
+        setDraftExperiences(data);
+      }
+    });
+
+    // Listen to Skills
+    const unsubSkills = onSnapshot(collection(db, 'users', user.uid, 'skills'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialSkills[0]);
+        setSkills(data);
+        setDraftSkills(data);
+      }
+    });
+
+    // Listen to Projects
+    const unsubProjects = onSnapshot(collection(db, 'users', user.uid, 'projects'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialProjects[0]);
+        setProjects(data);
+        setDraftProjects(data);
+      }
+    });
+
+    return () => {
+      unsubHero();
+      unsubStats();
+      unsubSnapchat();
+      unsubGoogleAds();
+      unsubTikTok();
+      unsubExperiences();
+      unsubSkills();
+      unsubProjects();
+    };
+  }, [user]);
+
+  // Admin Access Logic
+  useEffect(() => {
+    const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessParam = urlParams.get('admin_access');
+    const hasSavedAccess = localStorage.getItem('admin_access_unlocked') === 'true';
+
+    if (hasSavedAccess || (adminSecret && accessParam === adminSecret) || import.meta.env.DEV) {
+      setShowAdminButton(true);
+      if (accessParam === adminSecret) {
+        localStorage.setItem('admin_access_unlocked', 'true');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Sign in error:", error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
 
   const openAdmin = () => {
     setDraftHero({ ...hero });
     setDraftStats([...stats]);
     setDraftBestCampaigns(JSON.parse(JSON.stringify(bestCampaignsList)));
     setDraftSnapchatCampaigns(JSON.parse(JSON.stringify(snapchatCampaignsList)));
+    setDraftGoogleAdsCampaigns(JSON.parse(JSON.stringify(googleAdsCampaignsList)));
+    setDraftTiktokCampaigns(JSON.parse(JSON.stringify(tiktokCampaignsList)));
     setDraftExperiences(JSON.parse(JSON.stringify(experiences)));
     setDraftSkills([...skills]);
     setDraftProjects(JSON.parse(JSON.stringify(projects)));
@@ -227,7 +436,6 @@ export default function App() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (limit to 2MB for localStorage safety)
       if (file.size > 2 * 1024 * 1024) {
         console.error("Image size too large. Please choose an image smaller than 2MB.");
         return;
@@ -242,6 +450,84 @@ export default function App() {
     }
   };
 
+  const saveToFirestore = async () => {
+    if (!user) return;
+
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'settings', 'hero'), draftHero);
+
+      const statsCol = collection(db, 'users', user.uid, 'stats');
+      for (const stat of draftStats) {
+        await setDoc(doc(statsCol, stat.label), stat);
+      }
+
+      const snapCol = collection(db, 'users', user.uid, 'campaigns_snapchat');
+      for (const camp of draftSnapchatCampaigns) {
+        await setDoc(doc(snapCol, camp.id), camp);
+      }
+
+      const googleCol = collection(db, 'users', user.uid, 'campaigns_google_ads');
+      for (const camp of draftGoogleAdsCampaigns) {
+        await setDoc(doc(googleCol, camp.id), camp);
+      }
+
+      const tiktokCol = collection(db, 'users', user.uid, 'campaigns_tiktok');
+      for (const camp of draftTiktokCampaigns) {
+        await setDoc(doc(tiktokCol, camp.id), camp);
+      }
+
+      const expCol = collection(db, 'users', user.uid, 'experiences');
+      for (const exp of draftExperiences) {
+        await setDoc(doc(expCol, exp.company), exp);
+      }
+
+      const skillCol = collection(db, 'users', user.uid, 'skills');
+      for (const skill of draftSkills) {
+        await setDoc(doc(skillCol, skill.name), skill);
+      }
+
+      const projCol = collection(db, 'users', user.uid, 'projects');
+      for (const proj of draftProjects) {
+        await setDoc(doc(projCol, proj.title), proj);
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      throw error;
+    }
+  };
+
+  const saveToLocal = async () => {
+    setHero(draftHero);
+    setStats(draftStats);
+    setBestCampaignsList(draftBestCampaigns);
+    setSnapchatCampaignsList(draftSnapchatCampaigns);
+    setGoogleAdsCampaignsList(draftGoogleAdsCampaigns);
+    setTiktokCampaignsList(draftTiktokCampaigns);
+    setExperiences(draftExperiences);
+    setSkills(draftSkills);
+    setProjects(draftProjects);
+    
+    localStorage.setItem('portfolio_hero', JSON.stringify(draftHero));
+    localStorage.setItem('portfolio_stats', JSON.stringify(draftStats));
+    localStorage.setItem('portfolio_best', JSON.stringify(draftBestCampaigns));
+    localStorage.setItem('portfolio_snap', JSON.stringify(draftSnapchatCampaigns));
+    localStorage.setItem('portfolio_google', JSON.stringify(draftGoogleAdsCampaigns));
+    localStorage.setItem('portfolio_tiktok', JSON.stringify(draftTiktokCampaigns));
+    localStorage.setItem('portfolio_exp', JSON.stringify(draftExperiences));
+    localStorage.setItem('portfolio_skills', JSON.stringify(draftSkills));
+    localStorage.setItem('portfolio_projects', JSON.stringify(draftProjects));
+
+    if (user) {
+      try {
+        await saveToFirestore();
+      } catch (error) {
+        alert("Error saving to Firestore. Data saved locally.");
+      }
+    }
+
+    setIsAdminOpen(false);
+  };
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
@@ -254,7 +540,6 @@ export default function App() {
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
       const sheetUrl = import.meta.env.VITE_GOOGLE_SHEET_URL;
 
-      // Send to Google Sheets if URL exists
       if (sheetUrl) {
         const formData = new FormData(formRef.current);
         const data = {
@@ -266,17 +551,13 @@ export default function App() {
 
         fetch(sheetUrl, {
           method: 'POST',
-          mode: 'no-cors', // Google Apps Script requires no-cors for simple POST
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         }).catch(err => console.error('Google Sheets Error:', err));
       }
 
       if (!serviceId || !templateId || !publicKey) {
-        console.error('EmailJS environment variables are missing');
-        // Fallback for demo if keys are not set
         setTimeout(() => {
           setFormStatus('success');
           formRef.current?.reset();
@@ -285,12 +566,7 @@ export default function App() {
         return;
       }
 
-      await emailjs.sendForm(
-        serviceId,
-        templateId,
-        formRef.current,
-        publicKey
-      );
+      await emailjs.sendForm(serviceId, templateId, formRef.current, publicKey);
 
       setFormStatus('success');
       formRef.current.reset();
@@ -302,65 +578,67 @@ export default function App() {
     }
   };
 
-  // Load from localStorage on mount
-  useEffect(() => {
+  const handleAskAI = async () => {
+    if (!aiMessage.trim()) return;
+    setIsAiLoading(true);
+    setAiResponse('');
+
     try {
-      const savedHero = localStorage.getItem('portfolio_hero');
-      const savedStats = localStorage.getItem('portfolio_stats');
-      const savedBest = localStorage.getItem('portfolio_best');
-      const savedSnap = localStorage.getItem('portfolio_snap');
-      const savedExp = localStorage.getItem('portfolio_exp');
-      const savedSkills = localStorage.getItem('portfolio_skills');
-      const savedProjects = localStorage.getItem('portfolio_projects');
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const modelName = highThinkingMode ? "gemini-3.1-pro-preview" : "gemini-3-flash-preview";
+      
+      const config: any = {
+        systemInstruction: "You are an AI Assistant for a Media Buyer's portfolio. You help users understand the media buyer's experience, skills, and campaign performance. Be professional and concise.",
+      };
 
-      if (savedHero) setHero(JSON.parse(savedHero));
-      if (savedStats) setStats(JSON.parse(savedStats));
-      if (savedBest) setBestCampaignsList(JSON.parse(savedBest));
-      if (savedSnap) setSnapchatCampaignsList(JSON.parse(savedSnap));
-      if (savedExp) setExperiences(JSON.parse(savedExp));
-      if (savedSkills) setSkills(JSON.parse(savedSkills));
-      if (savedProjects) setProjects(JSON.parse(savedProjects));
-    } catch (error) {
-      console.error('Failed to load data from localStorage:', error);
-    }
-
-    // Admin Access Logic
-    const adminSecret = import.meta.env.VITE_ADMIN_SECRET;
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessParam = urlParams.get('admin_access');
-    const hasSavedAccess = localStorage.getItem('admin_access_unlocked') === 'true';
-
-    if (hasSavedAccess || (adminSecret && accessParam === adminSecret) || import.meta.env.DEV) {
-      setShowAdminButton(true);
-      if (accessParam === adminSecret) {
-        localStorage.setItem('admin_access_unlocked', 'true');
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+      if (highThinkingMode) {
+        config.thinkingConfig = { thinkingLevel: ThinkingLevel.HIGH };
       }
-    }
-  }, []);
 
-  const saveToLocal = () => {
-    setHero(draftHero);
-    setStats(draftStats);
-    setBestCampaignsList(draftBestCampaigns);
-    setSnapchatCampaignsList(draftSnapchatCampaigns);
-    setExperiences(draftExperiences);
-    setSkills(draftSkills);
-    setProjects(draftProjects);
-    
-    localStorage.setItem('portfolio_hero', JSON.stringify(draftHero));
-    localStorage.setItem('portfolio_stats', JSON.stringify(draftStats));
-    localStorage.setItem('portfolio_best', JSON.stringify(draftBestCampaigns));
-    localStorage.setItem('portfolio_snap', JSON.stringify(draftSnapchatCampaigns));
-    localStorage.setItem('portfolio_exp', JSON.stringify(draftExperiences));
-    localStorage.setItem('portfolio_skills', JSON.stringify(draftSkills));
-    localStorage.setItem('portfolio_projects', JSON.stringify(draftProjects));
-    setIsAdminOpen(false);
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: aiMessage,
+        config: config
+      });
+
+      setAiResponse(response.text || "No response from AI.");
+    } catch (error) {
+      console.error("AI Error:", error);
+      setAiResponse("Error communicating with AI. Please try again.");
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen selection:bg-black selection:text-white">
+      {/* Auth Controls */}
+      <div className="fixed top-6 right-6 z-[60] flex items-center gap-4">
+        {isAuthReady && (
+          user ? (
+            <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md border border-black/10 px-4 py-2 rounded-full shadow-lg">
+              <div className="flex items-center gap-2">
+                {user.photoURL && <img src={user.photoURL} alt={user.displayName || ''} className="w-6 h-6 rounded-full" />}
+                <span className="text-[10px] font-bold uppercase tracking-widest">{user.displayName}</span>
+              </div>
+              <button 
+                onClick={handleSignOut}
+                className="text-[10px] font-bold uppercase tracking-widest hover:opacity-50 transition-opacity"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={handleSignIn}
+              className="bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
+            >
+              Sign In with Google
+            </button>
+          )
+        )}
+      </div>
+
       {/* Admin Toggle */}
       {showAdminButton && (
         <button 
@@ -371,7 +649,88 @@ export default function App() {
         </button>
       )}
 
-      {/* Admin Panel Overlay */}
+      {/* AI Assistant Toggle */}
+      <button 
+        onClick={() => setShowAIAssistant(true)}
+        className="fixed bottom-24 right-8 w-14 h-14 bg-white text-black rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-40 border border-black/10"
+      >
+        <MessageSquare size={24} />
+      </button>
+
+      {/* AI Assistant Modal */}
+      <AnimatePresence>
+        {showAIAssistant && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-8 right-8 w-96 max-h-[600px] bg-white text-black rounded-3xl shadow-2xl z-50 flex flex-col border border-black/10 overflow-hidden"
+          >
+            <div className="p-6 border-b border-black/10 flex items-center justify-between bg-black text-white">
+              <div className="flex items-center gap-3">
+                <Brain size={20} className="text-white" />
+                <div>
+                  <h3 className="text-sm font-bold tracking-tighter">AI Portfolio Assistant</h3>
+                  <p className="text-[8px] uppercase tracking-widest opacity-60">Powered by Gemini 3.1 Pro</p>
+                </div>
+              </div>
+              <button onClick={() => setShowAIAssistant(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 p-6 overflow-y-auto space-y-4 min-h-[300px]">
+              {aiResponse ? (
+                <div className="bg-black/5 p-4 rounded-2xl text-sm leading-relaxed">
+                  {aiResponse}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
+                  <Brain size={40} />
+                  <p className="text-xs font-medium">Ask me anything about this portfolio or media buying strategies.</p>
+                </div>
+              )}
+              {isAiLoading && (
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-40 animate-pulse">
+                  <Loader2 size={14} className="animate-spin" /> Thinking...
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-black/10 space-y-4 bg-black/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div 
+                    onClick={() => setHighThinkingMode(!highThinkingMode)}
+                    className={`w-10 h-5 rounded-full transition-colors cursor-pointer relative ${highThinkingMode ? 'bg-black' : 'bg-black/20'}`}
+                  >
+                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${highThinkingMode ? 'left-6' : 'left-1'}`} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">High Thinking Mode</span>
+                </div>
+                {highThinkingMode && <Zap size={12} className="text-black animate-pulse" />}
+              </div>
+
+              <div className="relative">
+                <input 
+                  value={aiMessage}
+                  onChange={(e) => setAiMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAskAI()}
+                  placeholder="Type your question..."
+                  className="w-full bg-white border border-black/10 rounded-2xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
+                />
+                <button 
+                  onClick={handleAskAI}
+                  disabled={isAiLoading || !aiMessage.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black text-white rounded-xl disabled:opacity-20 transition-opacity"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {isAdminOpen && (
           <motion.div 
@@ -807,6 +1166,229 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Google Ads Performance Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <BarChart3 size={14} /> Google Ads Performance
+                </h3>
+                
+                {/* Visual Chart for Google Ads Performance */}
+                <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={(draftGoogleAdsCampaigns || []).slice(0, 8)}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                      <XAxis 
+                        dataKey="name" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tick={{ fill: 'rgba(0,0,0,0.4)' }}
+                      />
+                      <YAxis 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tick={{ fill: 'rgba(0,0,0,0.4)' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          borderRadius: '12px', 
+                          border: '1px solid rgba(0,0,0,0.1)',
+                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="top" 
+                        align="right" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em', paddingBottom: '20px' }}
+                      />
+                      <Bar dataKey="spent" name="Spent ($)" fill="#4285F4" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="result" name="Results" fill="#34A853" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p className="text-[10px] text-center mt-2 opacity-30 font-bold uppercase tracking-widest">Spent vs Results (Top 8)</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                    {(draftGoogleAdsCampaigns || []).map((campaign, i) => (
+                      <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex gap-4 items-center">
+                        <div className="flex-1 grid grid-cols-3 gap-2">
+                          <input 
+                            value={campaign.name} 
+                            onChange={(e) => {
+                              const newList = [...draftGoogleAdsCampaigns];
+                              newList[i].name = e.target.value;
+                              setDraftGoogleAdsCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs font-bold"
+                            placeholder="Name"
+                          />
+                          <input 
+                            value={campaign.spent} 
+                            type="number"
+                            onChange={(e) => {
+                              const newList = [...draftGoogleAdsCampaigns];
+                              newList[i].spent = Number(e.target.value);
+                              setDraftGoogleAdsCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs"
+                            placeholder="Spent"
+                          />
+                          <input 
+                            value={campaign.result} 
+                            type="number"
+                            onChange={(e) => {
+                              const newList = [...draftGoogleAdsCampaigns];
+                              newList[i].result = Number(e.target.value);
+                              setDraftGoogleAdsCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs"
+                            placeholder="Result"
+                          />
+                        </div>
+                        <button 
+                          onClick={() => setDraftGoogleAdsCampaigns(draftGoogleAdsCampaigns.filter((_, idx) => idx !== i))}
+                          className="text-black/20 hover:text-red-500"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => setDraftGoogleAdsCampaigns([...draftGoogleAdsCampaigns, { id: Date.now().toString(), name: 'New Google Ad', status: 'Paused', spent: 0, result: 0, type: 'Conversions', cost: 0, impressions: 0, clicks: 0 }])}
+                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
+                  >
+                    <Plus size={16} /> Add Google Ads Entry
+                  </button>
+                </div>
+              </div>
+
+              {/* TikTok Performance Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <Smartphone size={14} /> TikTok Performance
+                </h3>
+                
+                {/* Visual Chart for TikTok Performance */}
+                <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={(draftTiktokCampaigns || []).slice(0, 8)}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                      <XAxis 
+                        dataKey="name" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tick={{ fill: 'rgba(0,0,0,0.4)' }}
+                      />
+                      <YAxis 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tick={{ fill: 'rgba(0,0,0,0.4)' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          borderRadius: '12px', 
+                          border: '1px solid rgba(0,0,0,0.1)',
+                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="top" 
+                        align="right" 
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em', paddingBottom: '20px' }}
+                      />
+                      <Bar dataKey="spent" name="Spent ($)" fill="#000" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="result" name="Results" fill="#EE1D52" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p className="text-[10px] text-center mt-2 opacity-30 font-bold uppercase tracking-widest">Spent vs Results (Top 8)</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                    {(draftTiktokCampaigns || []).map((campaign, i) => (
+                      <div key={i} className="p-4 border border-black/10 bg-white/50 rounded-xl flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                          <input 
+                            value={campaign.name} 
+                            onChange={(e) => {
+                              const newList = [...draftTiktokCampaigns];
+                              newList[i].name = e.target.value;
+                              setDraftTiktokCampaigns(newList);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 text-xs font-bold flex-1 mr-4"
+                            placeholder="Campaign Name"
+                          />
+                          <button 
+                            onClick={() => setDraftTiktokCampaigns(draftTiktokCampaigns.filter((_, idx) => idx !== i))}
+                            className="text-black/20 hover:text-red-500"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-bold uppercase opacity-30">Spent ($)</label>
+                            <input 
+                              value={campaign.spent} 
+                              type="number"
+                              onChange={(e) => {
+                                const newList = [...draftTiktokCampaigns];
+                                newList[i].spent = Number(e.target.value);
+                                setDraftTiktokCampaigns(newList);
+                              }}
+                              className="w-full bg-transparent border-b border-black/10 py-1 text-xs"
+                              placeholder="Spent"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-bold uppercase opacity-30">Results</label>
+                            <input 
+                              value={campaign.result} 
+                              type="number"
+                              onChange={(e) => {
+                                const newList = [...draftTiktokCampaigns];
+                                newList[i].result = Number(e.target.value);
+                                setDraftTiktokCampaigns(newList);
+                              }}
+                              className="w-full bg-transparent border-b border-black/10 py-1 text-xs"
+                              placeholder="Result"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-bold uppercase opacity-30">Result Type</label>
+                            <input 
+                              value={campaign.type} 
+                              onChange={(e) => {
+                                const newList = [...draftTiktokCampaigns];
+                                newList[i].type = e.target.value;
+                                setDraftTiktokCampaigns(newList);
+                              }}
+                              className="w-full bg-transparent border-b border-black/10 py-1 text-xs"
+                              placeholder="e.g. Views"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => setDraftTiktokCampaigns([...draftTiktokCampaigns, { id: Date.now().toString(), name: 'New TikTok Ad', status: 'Active', spent: 0, result: 0, type: 'Views', cost: 0, impressions: 0, clicks: 0 }])}
+                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
+                  >
+                    <Plus size={16} /> Add TikTok Entry
+                  </button>
+                </div>
+              </div>
+
               {/* Projects Management */}
               <div className="mb-12">
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
@@ -1201,6 +1783,104 @@ export default function App() {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </div>
+
+            {/* Google Ads Detailed Results */}
+            <div className="mb-24">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-4xl font-bold tracking-tighter mb-4">Google Ads Performance</h2>
+                  <p className="text-white/40 max-w-xl">Strategic search and display campaigns focused on high-intent keywords and conversion optimization.</p>
+                </div>
+                <div className="hidden md:block">
+                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    Live Campaign Data
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(googleAdsCampaignsList || []).map((campaign, i) => (
+                      <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                        <td className="py-6 font-medium">{campaign.name}</td>
+                        <td className="py-6">
+                          <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-white/40'}`}>
+                            {campaign.status}
+                          </span>
+                        </td>
+                        <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
+                        <td className="py-6">
+                          <div className="font-bold">{campaign.result || 0}</div>
+                          <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
+                        </td>
+                        <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
+                        <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* TikTok Detailed Results */}
+            <div className="mb-24">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-4xl font-bold tracking-tighter mb-4">TikTok Performance</h2>
+                  <p className="text-white/40 max-w-xl">High-energy video campaigns leveraging trending sounds and UGC-style content to drive massive engagement.</p>
+                </div>
+                <div className="hidden md:block">
+                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    Viral Campaign Data
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
+                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(tiktokCampaignsList || []).map((campaign, i) => (
+                      <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                        <td className="py-6 font-medium">{campaign.name}</td>
+                        <td className="py-6">
+                          <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-[#EE1D52]/20 text-[#EE1D52]' : 'bg-white/10 text-white/40'}`}>
+                            {campaign.status}
+                          </span>
+                        </td>
+                        <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
+                        <td className="py-6">
+                          <div className="font-bold">{campaign.result || 0}</div>
+                          <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
+                        </td>
+                        <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
+                        <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
