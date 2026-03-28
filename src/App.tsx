@@ -1573,6 +1573,45 @@ export default function App() {
                         className="bg-transparent border border-black/5 p-2 w-full text-sm h-20"
                         placeholder="Description"
                       />
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase opacity-30">Tags</label>
+                        <div className="flex flex-wrap gap-2">
+                          {(project.tags || []).map((tag, j) => (
+                            <div key={j} className="flex items-center gap-1 bg-black/5 px-2 py-1 rounded">
+                              <input 
+                                value={tag} 
+                                onChange={(e) => {
+                                  const newProjects = [...draftProjects];
+                                  newProjects[i].tags[j] = e.target.value;
+                                  setDraftProjects(newProjects);
+                                }}
+                                className="bg-transparent text-[10px] font-bold uppercase w-20"
+                              />
+                              <button 
+                                onClick={() => {
+                                  const newProjects = [...draftProjects];
+                                  newProjects[i].tags = newProjects[i].tags.filter((_, idx) => idx !== j);
+                                  setDraftProjects(newProjects);
+                                }}
+                                className="text-black/20 hover:text-red-500"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          ))}
+                          <button 
+                            onClick={() => {
+                              const newProjects = [...draftProjects];
+                              newProjects[i].tags = [...(newProjects[i].tags || []), 'New Tag'];
+                              setDraftProjects(newProjects);
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100"
+                          >
+                            + Add Tag
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                   <button 
@@ -1793,17 +1832,29 @@ export default function App() {
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {insight.metrics.map((metric, j) => (
-                          <div key={j} className="space-y-1">
-                            <input 
-                              value={metric.label} 
-                              onChange={(e) => {
-                                const newInsights = [...draftInsights];
-                                newInsights[i].metrics[j].label = e.target.value;
-                                setDraftInsights(newInsights);
-                              }}
-                              className="w-full bg-transparent border-b border-black/5 text-[10px] uppercase opacity-40"
-                              placeholder="Metric Label"
-                            />
+                          <div key={j} className="p-3 border border-black/5 rounded-lg space-y-2 relative group-item">
+                            <div className="flex justify-between items-center">
+                              <input 
+                                value={metric.label} 
+                                onChange={(e) => {
+                                  const newInsights = [...draftInsights];
+                                  newInsights[i].metrics[j].label = e.target.value;
+                                  setDraftInsights(newInsights);
+                                }}
+                                className="w-full bg-transparent border-b border-black/5 text-[10px] uppercase opacity-40 mr-2"
+                                placeholder="Metric Label"
+                              />
+                              <button 
+                                onClick={() => {
+                                  const newInsights = [...draftInsights];
+                                  newInsights[i].metrics = newInsights[i].metrics.filter((_, idx) => idx !== j);
+                                  setDraftInsights(newInsights);
+                                }}
+                                className="text-black/20 hover:text-red-500"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
                             <input 
                               value={metric.value} 
                               onChange={(e) => {
@@ -1816,6 +1867,16 @@ export default function App() {
                             />
                           </div>
                         ))}
+                        <button 
+                          onClick={() => {
+                            const newInsights = [...draftInsights];
+                            newInsights[i].metrics.push({ label: 'New Metric', value: '0' });
+                            setDraftInsights(newInsights);
+                          }}
+                          className="p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold uppercase"
+                        >
+                          <Plus size={12} /> Add Metric
+                        </button>
                       </div>
 
                       <textarea 
@@ -1942,446 +2003,475 @@ export default function App() {
         </section>
 
         {/* Stats Grid */}
-        <section id="results" className="py-24 px-6 bg-black text-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
-              {(stats || []).map((stat, i) => {
-                const Icon = IconMap[stat.icon] || Globe;
-                return (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-8 border border-white/10 rounded-3xl hover:bg-white/5 transition-colors"
-                  >
-                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
-                      <Icon size={24} />
-                    </div>
-                    <div className="text-4xl font-bold tracking-tighter mb-2">{stat.value}</div>
-                    <div className="text-xs font-bold uppercase tracking-widest opacity-40">{stat.label}</div>
-                    <div className="text-[10px] uppercase tracking-widest mt-2 opacity-20">{stat.sub}</div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Best Performance Section */}
-            <div className="mb-32">
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-4xl font-bold tracking-tighter mb-4">Best Performance</h2>
-                  <p className="text-white/40 max-w-xl">High-impact campaigns with exceptional conversion rates and cost efficiency across various platforms.</p>
+        {((stats && stats.length > 0) || 
+          (bestCampaignsList && bestCampaignsList.length > 0) || 
+          (googleAdsCampaignsList && googleAdsCampaignsList.length > 0) || 
+          (tiktokCampaignsList && tiktokCampaignsList.length > 0) || 
+          (snapchatCampaignsList && snapchatCampaignsList.length > 0)) && (
+          <section id="results" className="py-24 px-6 bg-black text-white">
+            <div className="max-w-7xl mx-auto">
+              {stats && stats.length > 0 && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+                  {(stats || []).map((stat, i) => {
+                    const Icon = IconMap[stat.icon] || Globe;
+                    return (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.1 }}
+                        className="p-8 border border-white/10 rounded-3xl hover:bg-white/5 transition-colors"
+                      >
+                        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
+                          <Icon size={24} />
+                        </div>
+                        <div className="text-4xl font-bold tracking-tighter mb-2">{stat.value}</div>
+                        <div className="text-xs font-bold uppercase tracking-widest opacity-40">{stat.label}</div>
+                        <div className="text-[10px] uppercase tracking-widest mt-2 opacity-20">{stat.sub}</div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
-                <div className="hidden md:block">
-                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    Top Performers
+              )}
+
+              {/* Best Performance Section */}
+              {bestCampaignsList && bestCampaignsList.length > 0 && (
+                <div className="mb-32">
+                  <div className="flex items-center justify-between mb-12">
+                    <div>
+                      <h2 className="text-4xl font-bold tracking-tighter mb-4">Best Performance</h2>
+                      <p className="text-white/40 max-w-xl">High-impact campaigns with exceptional conversion rates and cost efficiency across various platforms.</p>
+                    </div>
+                    <div className="hidden md:block">
+                      <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                        Top Performers
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {(bestCampaignsList || []).map((campaign, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.1 }}
+                        className="p-8 border border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 transition-all group"
+                      >
+                        <div className="flex justify-between items-start mb-8">
+                          <h3 className="text-2xl font-bold tracking-tight">{campaign.name}</h3>
+                          <div className="px-2 py-1 bg-green-500/20 text-green-500 rounded text-[8px] font-bold uppercase tracking-widest">Featured</div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-6 mb-8">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conversions</div>
+                            <div className="text-2xl font-bold">{(campaign.conversions || 0).toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conv. Rate</div>
+                            <div className="text-2xl font-bold text-green-500">{campaign.convRate || '0%'}</div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 pt-6 border-t border-white/10">
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-40">Spent</span>
+                            <span className="font-mono">${(campaign.spent || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-40">CTR</span>
+                            <span className="font-bold">{campaign.ctr || '0%'}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-40">Cost per Conv.</span>
+                            <span className="font-bold text-green-500">${(campaign.costPerConv || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-40">CPC</span>
+                            <span className="font-mono">${(campaign.cpc || 0).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {(bestCampaignsList || []).map((campaign, i) => (
+              {/* Google Ads Detailed Results */}
+              {googleAdsCampaignsList && googleAdsCampaignsList.length > 0 && (
+                <div className="mb-24">
+                  <div className="flex items-center justify-between mb-12">
+                    <div>
+                      <h2 className="text-4xl font-bold tracking-tighter mb-4">Google Ads Performance</h2>
+                      <p className="text-white/40 max-w-xl">Strategic search and display campaigns focused on high-intent keywords and conversion optimization.</p>
+                    </div>
+                    <div className="hidden md:block">
+                      <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                        Live Campaign Data
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(googleAdsCampaignsList || []).map((campaign, i) => (
+                          <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                            <td className="py-6 font-medium">{campaign.name}</td>
+                            <td className="py-6">
+                              <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-white/40'}`}>
+                                {campaign.status}
+                              </span>
+                            </td>
+                            <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
+                            <td className="py-6">
+                              <div className="font-bold">{campaign.result || 0}</div>
+                              <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
+                            </td>
+                            <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
+                            <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* TikTok Detailed Results */}
+              {tiktokCampaignsList && tiktokCampaignsList.length > 0 && (
+                <div className="mb-24">
+                  <div className="flex items-center justify-between mb-12">
+                    <div>
+                      <h2 className="text-4xl font-bold tracking-tighter mb-4">TikTok Performance</h2>
+                      <p className="text-white/40 max-w-xl">High-energy video campaigns leveraging trending sounds and UGC-style content to drive massive engagement.</p>
+                    </div>
+                    <div className="hidden md:block">
+                      <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                        Viral Campaign Data
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(tiktokCampaignsList || []).map((campaign, i) => (
+                          <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                            <td className="py-6 font-medium">{campaign.name}</td>
+                            <td className="py-6">
+                              <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-[#EE1D52]/20 text-[#EE1D52]' : 'bg-white/10 text-white/40'}`}>
+                                {campaign.status}
+                              </span>
+                            </td>
+                            <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
+                            <td className="py-6">
+                              <div className="font-bold">{campaign.result || 0}</div>
+                              <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
+                            </td>
+                            <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
+                            <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Snapchat Detailed Results */}
+              {snapchatCampaignsList && snapchatCampaignsList.length > 0 && (
+                <div className="mb-24">
+                  <div className="flex items-center justify-between mb-12">
+                    <div>
+                      <h2 className="text-4xl font-bold tracking-tighter mb-4">Snapchat Performance</h2>
+                      <p className="text-white/40 max-w-xl">Detailed breakdown of the last quarter campaigns for Sound & Fog Cafe, demonstrating consistent growth and efficient scaling.</p>
+                    </div>
+                    <div className="hidden md:block">
+                      <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                        Last Quarter Data
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
+                          <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(snapchatCampaignsList || []).map((campaign, i) => (
+                          <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                            <td className="py-6 font-medium">{campaign.name}</td>
+                            <td className="py-6">
+                              <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-white/10 text-white/40'}`}>
+                                {campaign.status}
+                              </span>
+                            </td>
+                            <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
+                            <td className="py-6">
+                              <div className="font-bold">{campaign.result || 0}</div>
+                              <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
+                            </td>
+                            <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
+                            <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+
+        {/* Projects Section */}
+        {projects && projects.length > 0 && (
+          <section id="projects" className="py-24 px-6 bg-white/10">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col md:flex-row gap-12 mb-16">
+                <div className="md:w-1/3">
+                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40">
+                    Featured <br /> Projects
+                  </h2>
+                </div>
+                <div className="md:w-2/3">
+                  <p className="text-2xl font-medium text-black/80 leading-snug">
+                    Proven success in scaling brands and optimizing ad spend across multiple industries.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {(projects || []).map((project, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="p-8 border border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 transition-all group"
+                    className="p-8 border border-black/10 bg-[var(--color-brand-bg)] flex flex-col justify-between group hover:border-black transition-colors overflow-hidden"
                   >
-                    <div className="flex justify-between items-start mb-8">
-                      <h3 className="text-2xl font-bold tracking-tight">{campaign.name}</h3>
-                      <div className="px-2 py-1 bg-green-500/20 text-green-500 rounded text-[8px] font-bold uppercase tracking-widest">Featured</div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-6 mb-8">
-                      <div>
-                        <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conversions</div>
-                        <div className="text-2xl font-bold">{(campaign.conversions || 0).toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-widest opacity-40 mb-1">Conv. Rate</div>
-                        <div className="text-2xl font-bold text-green-500">{campaign.convRate || '0%'}</div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 pt-6 border-t border-white/10">
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-40">Spent</span>
-                        <span className="font-mono">${(campaign.spent || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-40">CTR</span>
-                        <span className="font-bold">{campaign.ctr || '0%'}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-40">Cost per Conv.</span>
-                        <span className="font-bold text-green-500">${(campaign.costPerConv || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-40">CPC</span>
-                        <span className="font-mono">${(campaign.cpc || 0).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* Google Ads Detailed Results */}
-            <div className="mb-24">
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-4xl font-bold tracking-tighter mb-4">Google Ads Performance</h2>
-                  <p className="text-white/40 max-w-xl">Strategic search and display campaigns focused on high-intent keywords and conversion optimization.</p>
-                </div>
-                <div className="hidden md:block">
-                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    Live Campaign Data
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(googleAdsCampaignsList || []).map((campaign, i) => (
-                      <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                        <td className="py-6 font-medium">{campaign.name}</td>
-                        <td className="py-6">
-                          <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-white/40'}`}>
-                            {campaign.status}
-                          </span>
-                        </td>
-                        <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
-                        <td className="py-6">
-                          <div className="font-bold">{campaign.result || 0}</div>
-                          <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
-                        </td>
-                        <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
-                        <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* TikTok Detailed Results */}
-            <div className="mb-24">
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-4xl font-bold tracking-tighter mb-4">TikTok Performance</h2>
-                  <p className="text-white/40 max-w-xl">High-energy video campaigns leveraging trending sounds and UGC-style content to drive massive engagement.</p>
-                </div>
-                <div className="hidden md:block">
-                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    Viral Campaign Data
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(tiktokCampaignsList || []).map((campaign, i) => (
-                      <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                        <td className="py-6 font-medium">{campaign.name}</td>
-                        <td className="py-6">
-                          <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-[#EE1D52]/20 text-[#EE1D52]' : 'bg-white/10 text-white/40'}`}>
-                            {campaign.status}
-                          </span>
-                        </td>
-                        <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
-                        <td className="py-6">
-                          <div className="font-bold">{campaign.result || 0}</div>
-                          <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
-                        </td>
-                        <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
-                        <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Snapchat Detailed Results */}
-            <div className="mb-24">
-              <div className="flex items-center justify-between mb-12">
-                <div>
-                  <h2 className="text-4xl font-bold tracking-tighter mb-4">Snapchat Performance</h2>
-                  <p className="text-white/40 max-w-xl">Detailed breakdown of the last quarter campaigns for Sound & Fog Cafe, demonstrating consistent growth and efficient scaling.</p>
-                </div>
-                <div className="hidden md:block">
-                  <div className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    Last Quarter Data
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Campaign Name</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Status</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Spent</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Results</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Impressions</th>
-                      <th className="py-6 text-[10px] font-bold uppercase tracking-widest opacity-40">Cost/Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(snapchatCampaignsList || []).map((campaign, i) => (
-                      <tr key={campaign.id || i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                        <td className="py-6 font-medium">{campaign.name}</td>
-                        <td className="py-6">
-                          <span className={`px-2 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${campaign.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-white/10 text-white/40'}`}>
-                            {campaign.status}
-                          </span>
-                        </td>
-                        <td className="py-6 font-mono text-sm">${(campaign.spent || 0).toFixed(2)}</td>
-                        <td className="py-6">
-                          <div className="font-bold">{campaign.result || 0}</div>
-                          <div className="text-[8px] uppercase tracking-widest opacity-40">{campaign.type}</div>
-                        </td>
-                        <td className="py-6 font-mono text-sm opacity-60">{(campaign.impressions || 0).toLocaleString()}</td>
-                        <td className="py-6 font-bold text-sm">${(campaign.cost || 0).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Projects Section */}
-        <section id="projects" className="py-24 px-6 bg-white/10">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-12 mb-16">
-              <div className="md:w-1/3">
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40">
-                  Featured <br /> Projects
-                </h2>
-              </div>
-              <div className="md:w-2/3">
-                <p className="text-2xl font-medium text-black/80 leading-snug">
-                  Proven success in scaling brands and optimizing ad spend across multiple industries.
-                </p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {(projects || []).map((project, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-8 border border-black/10 bg-[var(--color-brand-bg)] flex flex-col justify-between group hover:border-black transition-colors overflow-hidden"
-                >
-                  {project.image && (
-                    <div className="mb-6 -mx-8 -mt-8 h-48 overflow-hidden">
-                      <img 
-                        src={project.image} 
-                        alt={project.title}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {(project.tags || []).map((tag, j) => (
-                        <span key={j} className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black/5 rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <h3 className="text-3xl font-bold tracking-tight mb-4">{project.title}</h3>
-                    <p className="text-black/60 leading-relaxed mb-8">
-                      {project.description}
-                    </p>
-                  </div>
-                  <a 
-                    href={project.link} 
-                    className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest group-hover:gap-4 transition-all"
-                  >
-                    View Project <ExternalLink size={14} />
-                  </a>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Experience Section */}
-        <section id="experience" className="py-24 px-6 bg-white/30">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-12">
-              <div className="md:w-1/3">
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 sticky top-32">
-                  Professional <br /> Experience
-                </h2>
-              </div>
-              <div className="md:w-2/3 space-y-24">
-                {(experiences || []).map((exp, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    className="group"
-                  >
-                    <div className="flex justify-between items-baseline mb-6">
-                      <h3 className="text-3xl font-bold tracking-tight">{exp.role}</h3>
-                      <span className="font-mono text-xs opacity-40">{exp.period}</span>
-                    </div>
-                    {exp.image && (
-                      <div className="mb-8 h-64 rounded-2xl overflow-hidden border border-black/5">
+                    {project.image && (
+                      <div className="mb-6 -mx-8 -mt-8 h-48 overflow-hidden">
                         <img 
-                          src={exp.image} 
-                          alt={exp.company}
-                          className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                          src={project.image} 
+                          alt={project.title}
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
                           referrerPolicy="no-referrer"
                         />
                       </div>
                     )}
-                    <div className="text-lg font-medium mb-6 text-black/60 italic font-serif">
-                      {exp.company}
+                    <div>
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {(project.tags || []).map((tag, j) => (
+                          <span key={j} className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black/5 rounded">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <h3 className="text-3xl font-bold tracking-tight mb-4">{project.title}</h3>
+                      <p className="text-black/60 leading-relaxed mb-8">
+                        {project.description}
+                      </p>
                     </div>
-                    <ul className="space-y-4">
-                      {(exp.description || []).map((item, j) => (
-                        <li key={j} className="flex gap-4 text-black/70 leading-relaxed">
-                          <span className="mt-2 w-1.5 h-1.5 rounded-full bg-black/20 shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                    <a 
+                      href={project.link} 
+                      className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest group-hover:gap-4 transition-all"
+                    >
+                      View Project <ExternalLink size={14} />
+                    </a>
                   </motion.div>
                 ))}
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+
+        {/* Experience Section */}
+        {experiences && experiences.length > 0 && (
+          <section id="experience" className="py-24 px-6 bg-white/30">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col md:flex-row gap-12">
+                <div className="md:w-1/3">
+                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 sticky top-32">
+                    Professional <br /> Experience
+                  </h2>
+                </div>
+                <div className="md:w-2/3 space-y-24">
+                  {(experiences || []).map((exp, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      className="group"
+                    >
+                      <div className="flex justify-between items-baseline mb-6">
+                        <h3 className="text-3xl font-bold tracking-tight">{exp.role}</h3>
+                        <span className="font-mono text-xs opacity-40">{exp.period}</span>
+                      </div>
+                      {exp.image && (
+                        <div className="mb-8 h-64 rounded-2xl overflow-hidden border border-black/5">
+                          <img 
+                            src={exp.image} 
+                            alt={exp.company}
+                            className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      )}
+                      <div className="text-lg font-medium mb-6 text-black/60 italic font-serif">
+                        {exp.company}
+                      </div>
+                      <ul className="space-y-4">
+                        {(exp.description || []).map((item, j) => (
+                          <li key={j} className="flex gap-4 text-black/70 leading-relaxed">
+                            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-black/20 shrink-0" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
 
         {/* Skills & Tools */}
-        <section id="skills" className="py-24 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              <div>
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
-                  Core Expertise
-                </h2>
-                <div className="space-y-2">
-                  {(skills || []).filter(s => s.category === 'Platform').map((skill, i) => (
-                    <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
-                      <span className="font-bold tracking-tight">{skill.name}</span>
-                      <Smartphone size={16} className="opacity-40" />
-                    </div>
-                  ))}
+        {skills && skills.length > 0 && (
+          <section id="skills" className="py-24 px-6">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
+                    Core Expertise
+                  </h2>
+                  <div className="space-y-2">
+                    {(skills || []).filter(s => s.category === 'Platform').map((skill, i) => (
+                      <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
+                        <span className="font-bold tracking-tight">{skill.name}</span>
+                        <Smartphone size={16} className="opacity-40" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
-                  Strategic Skills
-                </h2>
-                <div className="space-y-2">
-                  {(skills || []).filter(s => s.category === 'Skill').map((skill, i) => (
-                    <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
-                      <span className="font-bold tracking-tight">{skill.name}</span>
-                      <Zap size={16} className="opacity-40" />
-                    </div>
-                  ))}
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
+                    Strategic Skills
+                  </h2>
+                  <div className="space-y-2">
+                    {(skills || []).filter(s => s.category === 'Skill').map((skill, i) => (
+                      <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
+                        <span className="font-bold tracking-tight">{skill.name}</span>
+                        <Zap size={16} className="opacity-40" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
-                  Technical Stack
-                </h2>
-                <div className="space-y-2">
-                  {(skills || []).filter(s => s.category === 'Tool').map((skill, i) => (
-                    <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
-                      <span className="font-bold tracking-tight">{skill.name}</span>
-                      <Layers size={16} className="opacity-40" />
-                    </div>
-                  ))}
+                <div>
+                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
+                    Technical Stack
+                  </h2>
+                  <div className="space-y-2">
+                    {(skills || []).filter(s => s.category === 'Tool').map((skill, i) => (
+                      <div key={i} className="p-4 border border-black/5 flex justify-between items-center hover-invert cursor-default">
+                        <span className="font-bold tracking-tight">{skill.name}</span>
+                        <Layers size={16} className="opacity-40" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
 
         {/* Campaign Insights / Case Study Style */}
-        <section className="py-24 px-6 bg-black text-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-16">
-              <h2 className="text-5xl font-bold tracking-tighter mb-4">CAMPAIGN INSIGHTS</h2>
-              <p className="text-white/60 max-w-xl">
-                A glimpse into the performance metrics achieved across various platforms. 
-                Focused on high-intent targeting and ROI-driven optimization.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {(insights || []).map((insight, i) => {
-                const Icon = IconMap[insight.icon] || TrendingUp;
-                return (
-                  <div key={i} className="p-8 border border-white/10 rounded-2xl bg-white/5">
-                    <div className="flex items-center gap-3 mb-8">
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: insight.color }}
-                      >
-                        <Icon className="text-black" size={20} />
-                      </div>
-                      <div>
-                        <div className="font-bold">{insight.title}</div>
-                        <div className="text-xs opacity-50 uppercase tracking-widest">{insight.market}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                      {insight.metrics.map((metric, j) => (
-                        <div key={j} className="p-4 bg-white/5 rounded-xl">
-                          <div className="text-2xl font-bold">{metric.value}</div>
-                          <div className="text-[10px] uppercase opacity-40">{metric.label}</div>
+        {insights && insights.length > 0 && (
+          <section className="py-24 px-6 bg-black text-white">
+            <div className="max-w-7xl mx-auto">
+              <div className="mb-16">
+                <h2 className="text-5xl font-bold tracking-tighter mb-4">CAMPAIGN INSIGHTS</h2>
+                <p className="text-white/60 max-w-xl">
+                  A glimpse into the performance metrics achieved across various platforms. 
+                  Focused on high-intent targeting and ROI-driven optimization.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {(insights || []).map((insight, i) => {
+                  const Icon = IconMap[insight.icon] || TrendingUp;
+                  return (
+                    <div key={i} className="p-8 border border-white/10 rounded-2xl bg-white/5">
+                      <div className="flex items-center gap-3 mb-8">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: insight.color }}
+                        >
+                          <Icon className="text-black" size={20} />
                         </div>
-                      ))}
+                        <div>
+                          <div className="font-bold">{insight.title}</div>
+                          <div className="text-xs opacity-50 uppercase tracking-widest">{insight.market}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 mb-8">
+                        {insight.metrics.map((metric, j) => (
+                          <div key={j} className="p-4 bg-white/5 rounded-xl">
+                            <div className="text-2xl font-bold">{metric.value}</div>
+                            <div className="text-[10px] uppercase opacity-40">{metric.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-sm text-white/60 leading-relaxed">
+                        {insight.description}
+                      </div>
                     </div>
-                    <div className="text-sm text-white/60 leading-relaxed">
-                      {insight.description}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
 
         {/* Contact Section */}
         <section id="contact" className="py-24 px-6">
