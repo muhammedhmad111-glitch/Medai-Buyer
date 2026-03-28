@@ -67,18 +67,17 @@
       },
       "required": ["name", "category"]
     },
-    "Project": {
-      "title": "Project",
-      "description": "A portfolio project entry.",
+    "Education": {
+      "title": "Education",
+      "description": "An academic background entry.",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "link": { "type": "string" },
-        "image": { "type": "string" },
-        "tags": { "type": "array", "items": { "type": "string" } }
+        "degree": { "type": "string" },
+        "institution": { "type": "string" },
+        "period": { "type": "string" },
+        "description": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["title", "description"]
+      "required": ["degree", "institution", "period"]
     },
     "Insight": {
       "title": "Campaign Insight",
@@ -104,7 +103,7 @@
     "/campaigns/tiktok": { "schema": "Campaign", "description": "TikTok campaign data." },
     "/experiences": { "schema": "Experience", "description": "Collection of work experiences." },
     "/skills": { "schema": "Skill", "description": "Collection of professional skills." },
-    "/projects": { "schema": "Project", "description": "Collection of portfolio projects." },
+    "/education": { "schema": "Education", "description": "Collection of academic background entries." },
     "/insights": { "schema": "Insight", "description": "Collection of campaign performance insights." }
   }
 }

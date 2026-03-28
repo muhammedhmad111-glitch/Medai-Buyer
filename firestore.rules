@@ -31,7 +31,7 @@ service cloud.firestore {
       match /skills/{document=**} {
         allow read, write: if isOwner(userId);
       }
-      match /projects/{document=**} {
+      match /education/{document=**} {
         allow read, write: if isOwner(userId);
       }
       match /insights/{document=**} {

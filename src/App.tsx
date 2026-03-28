@@ -226,37 +226,6 @@ const initialSkills = [
   { name: 'Canva / CapCut', category: 'Tool' },
 ];
 
-const initialProjects = [
-  {
-    title: 'E-commerce Scaling Strategy',
-    description: 'Scaled a niche e-commerce brand from $500 to $5,000 monthly spend while maintaining a 3.5x ROAS using Meta and TikTok Ads.',
-    link: '#',
-    image: '',
-    tags: ['Meta Ads', 'TikTok', 'E-commerce']
-  },
-  {
-    title: 'F&B Lead Generation',
-    description: 'Increased store visits for Sound & Fog Cafe by 40% through localized Snapchat and Instagram campaigns targeting high-intent foodies.',
-    link: '#',
-    image: '',
-    tags: ['Snapchat', 'Instagram', 'Local SEO']
-  },
-  {
-    title: 'Luxury Beauty Campaign',
-    description: 'Achieved 100% female audience penetration for a luxury beauty brand using iOS-specific targeting on Snapchat Ads.',
-    link: '#',
-    image: '',
-    tags: ['Snapchat', 'iOS Targeting', 'Luxury']
-  },
-  {
-    title: 'Real Estate Funnel Optimization',
-    description: 'Developed a full-funnel strategy for a real estate client, reducing CPL by 25% through advanced retargeting and lookalike audiences.',
-    link: '#',
-    image: '',
-    tags: ['Google Ads', 'Retargeting', 'Real Estate']
-  }
-];
-
 const initialInsights = [
   {
     id: '1',
@@ -322,7 +291,6 @@ export default function App() {
   const [experiences, setExperiences] = useState(initialExperiences);
   const [education, setEducation] = useState(initialEducation);
   const [skills, setSkills] = useState(initialSkills);
-  const [projects, setProjects] = useState(initialProjects);
   const [insights, setInsights] = useState(initialInsights);
 
   // Draft States for Admin
@@ -335,7 +303,6 @@ export default function App() {
   const [draftExperiences, setDraftExperiences] = useState(experiences);
   const [draftEducation, setDraftEducation] = useState(education);
   const [draftSkills, setDraftSkills] = useState(skills);
-  const [draftProjects, setDraftProjects] = useState(projects);
   const [draftInsights, setDraftInsights] = useState(insights);
 
   // Firebase Auth Listener
@@ -361,7 +328,6 @@ export default function App() {
         const savedExp = localStorage.getItem('portfolio_exp');
         const savedEdu = localStorage.getItem('portfolio_edu');
         const savedSkills = localStorage.getItem('portfolio_skills');
-        const savedProjects = localStorage.getItem('portfolio_projects');
         const savedInsights = localStorage.getItem('portfolio_insights');
 
         if (savedHero) setHero(JSON.parse(savedHero));
@@ -373,7 +339,6 @@ export default function App() {
         if (savedExp) setExperiences(JSON.parse(savedExp));
         if (savedEdu) setEducation(JSON.parse(savedEdu));
         if (savedSkills) setSkills(JSON.parse(savedSkills));
-        if (savedProjects) setProjects(JSON.parse(savedProjects));
         if (savedInsights) setInsights(JSON.parse(savedInsights));
       } catch (error) {
         console.error('Failed to load data from localStorage:', error);
@@ -453,15 +418,6 @@ export default function App() {
       }
     });
 
-    // Listen to Projects
-    const unsubProjects = onSnapshot(collection(db, 'users', user.uid, 'projects'), (querySnap) => {
-      if (!querySnap.empty) {
-        const data = querySnap.docs.map(d => d.data() as typeof initialProjects[0]);
-        setProjects(data);
-        setDraftProjects(data);
-      }
-    });
-
     // Listen to Insights
     const unsubInsights = onSnapshot(collection(db, 'users', user.uid, 'insights'), (querySnap) => {
       if (!querySnap.empty) {
@@ -480,7 +436,6 @@ export default function App() {
       unsubExperiences();
       unsubEducation();
       unsubSkills();
-      unsubProjects();
       unsubInsights();
     };
   }, [user]);
@@ -527,7 +482,6 @@ export default function App() {
     setDraftExperiences(JSON.parse(JSON.stringify(experiences)));
     setDraftEducation(JSON.parse(JSON.stringify(education)));
     setDraftSkills([...skills]);
-    setDraftProjects(JSON.parse(JSON.stringify(projects)));
     setDraftInsights(JSON.parse(JSON.stringify(insights)));
     setIsAdminOpen(true);
   };
@@ -620,11 +574,6 @@ export default function App() {
         await setDoc(doc(skillCol, skill.name), skill);
       }
 
-      const projCol = collection(db, 'users', user.uid, 'projects');
-      for (const proj of draftProjects) {
-        await setDoc(doc(projCol, proj.title), proj);
-      }
-
       const insightCol = collection(db, 'users', user.uid, 'insights');
       for (const insight of draftInsights) {
         await setDoc(doc(insightCol, insight.id), insight);
@@ -645,7 +594,6 @@ export default function App() {
     setExperiences(draftExperiences);
     setEducation(draftEducation);
     setSkills(draftSkills);
-    setProjects(draftProjects);
     setInsights(draftInsights);
     
     const safeSave = (key: string, data: any) => {
@@ -669,7 +617,6 @@ export default function App() {
     safeSave('portfolio_exp', draftExperiences);
     safeSave('portfolio_edu', draftEducation);
     safeSave('portfolio_skills', draftSkills);
-    safeSave('portfolio_projects', draftProjects);
     safeSave('portfolio_insights', draftInsights);
 
     if (user) {
@@ -1526,141 +1473,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Projects Management */}
-              <div className="mb-12">
-                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
-                  <Layers size={14} /> Projects
-                </h3>
-                <div className="space-y-4">
-                  {(draftProjects || []).map((project, i) => (
-                    <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
-                      <div className="flex justify-between">
-                        <input 
-                          value={project.title} 
-                          onChange={(e) => {
-                            const newProjects = [...draftProjects];
-                            newProjects[i].title = e.target.value;
-                            setDraftProjects(newProjects);
-                          }}
-                          className="bg-transparent border-b border-black/10 py-1 font-bold w-full mr-4"
-                          placeholder="Project Title"
-                        />
-                        <button 
-                          onClick={() => setDraftProjects(draftProjects.filter((_, idx) => idx !== i))}
-                          className="text-black/20 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase opacity-30">Project Image</label>
-                        <div className="flex gap-2">
-                          <input 
-                            value={project.image || ''} 
-                            onChange={(e) => {
-                              const newProjects = [...draftProjects];
-                              newProjects[i].image = e.target.value;
-                              setDraftProjects(newProjects);
-                            }}
-                            className="bg-transparent border-b border-black/10 py-1 text-xs flex-1"
-                            placeholder="Image URL (https://...)"
-                          />
-                          <label className="cursor-pointer p-2 border border-black/10 rounded-lg hover:bg-black/5 transition-colors flex items-center gap-2 text-[10px] font-bold uppercase">
-                            <Upload size={14} />
-                            Upload
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handleImageUpload(e, (base64) => {
-                                const newProjects = [...draftProjects];
-                                newProjects[i].image = base64;
-                                setDraftProjects(newProjects);
-                              })}
-                            />
-                          </label>
-                          {project.image && (
-                            <button 
-                              onClick={() => {
-                                const newProjects = [...draftProjects];
-                                newProjects[i].image = '';
-                                setDraftProjects(newProjects);
-                              }}
-                              className="p-2 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 hover:border-red-500 transition-colors flex items-center gap-2 text-[10px] font-bold uppercase"
-                            >
-                              <Trash2 size={14} />
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                        <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border border-black/5 bg-black/[0.02] flex items-center justify-center">
-                          {project.image ? (
-                            <img src={project.image} alt="Preview" className="w-full h-full object-cover" />
-                          ) : (
-                            <Camera size={20} className="text-black/10" />
-                          )}
-                        </div>
-                      </div>
-                      <textarea 
-                        value={project.description} 
-                        onChange={(e) => {
-                          const newProjects = [...draftProjects];
-                          newProjects[i].description = e.target.value;
-                          setDraftProjects(newProjects);
-                        }}
-                        className="bg-transparent border border-black/5 p-2 w-full text-sm h-20"
-                        placeholder="Description"
-                      />
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase opacity-30">Tags</label>
-                        <div className="flex flex-wrap gap-2">
-                          {(project.tags || []).map((tag, j) => (
-                            <div key={j} className="flex items-center gap-1 bg-black/5 px-2 py-1 rounded">
-                              <input 
-                                value={tag} 
-                                onChange={(e) => {
-                                  const newProjects = [...draftProjects];
-                                  newProjects[i].tags[j] = e.target.value;
-                                  setDraftProjects(newProjects);
-                                }}
-                                className="bg-transparent text-[10px] font-bold uppercase w-20"
-                              />
-                              <button 
-                                onClick={() => {
-                                  const newProjects = [...draftProjects];
-                                  newProjects[i].tags = newProjects[i].tags.filter((_, idx) => idx !== j);
-                                  setDraftProjects(newProjects);
-                                }}
-                                className="text-black/20 hover:text-red-500"
-                              >
-                                <Trash2 size={10} />
-                              </button>
-                            </div>
-                          ))}
-                          <button 
-                            onClick={() => {
-                              const newProjects = [...draftProjects];
-                              newProjects[i].tags = [...(newProjects[i].tags || []), 'New Tag'];
-                              setDraftProjects(newProjects);
-                            }}
-                            className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100"
-                          >
-                            + Add Tag
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <button 
-                    onClick={() => setDraftProjects([...draftProjects, { title: 'New Project', description: '', link: '#', tags: [] }])}
-                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
-                  >
-                    <Plus size={16} /> Add Project
-                  </button>
-                </div>
-              </div>
-
               {/* Experience Management */}
               <div className="mb-12">
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
@@ -2092,7 +1904,6 @@ export default function App() {
           </div>
             <div className="hidden md:flex gap-8 text-xs font-medium uppercase tracking-widest">
               <a href="#results" className="hover:opacity-50 transition-opacity">Results</a>
-              <a href="#projects" className="hover:opacity-50 transition-opacity">Projects</a>
               <a href="#experience" className="hover:opacity-50 transition-opacity">Experience</a>
               <a href="#education" className="hover:opacity-50 transition-opacity">Education</a>
               <a href="#skills" className="hover:opacity-50 transition-opacity">Expertise</a>
@@ -2405,70 +2216,6 @@ export default function App() {
                   </div>
                 </div>
               )}
-            </div>
-          </section>
-        )}
-
-
-        {/* Projects Section */}
-        {projects && projects.length > 0 && (
-          <section id="projects" className="py-24 px-6 bg-white/10">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex flex-col md:flex-row gap-12 mb-16">
-                <div className="md:w-1/3">
-                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40">
-                    Featured <br /> Projects
-                  </h2>
-                </div>
-                <div className="md:w-2/3">
-                  <p className="text-2xl font-medium text-black/80 leading-snug">
-                    Proven success in scaling brands and optimizing ad spend across multiple industries.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {(projects || []).map((project, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-8 border border-black/10 bg-[var(--color-brand-bg)] flex flex-col justify-between group hover:border-black transition-colors overflow-hidden"
-                  >
-                    {project.image && (
-                      <div className="mb-6 -mx-8 -mt-8 h-48 overflow-hidden">
-                        <img 
-                          src={project.image} 
-                          alt={project.title}
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {(project.tags || []).map((tag, j) => (
-                          <span key={j} className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black/5 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <h3 className="text-3xl font-bold tracking-tight mb-4">{project.title}</h3>
-                      <p className="text-black/60 leading-relaxed mb-8">
-                        {project.description}
-                      </p>
-                    </div>
-                    <a 
-                      href={project.link} 
-                      className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest group-hover:gap-4 transition-all"
-                    >
-                      View Project <ExternalLink size={14} />
-                    </a>
-                  </motion.div>
-                ))}
-              </div>
             </div>
           </section>
         )}
