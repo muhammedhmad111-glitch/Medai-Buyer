@@ -1136,7 +1136,7 @@ export default function App() {
                 
                 {/* Visual Chart for Snapchat Performance */}
                 <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
                     <BarChart data={(draftSnapchatCampaigns || []).slice(0, 8)}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                       <XAxis 
@@ -1175,7 +1175,7 @@ export default function App() {
 
                 <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
                   <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-4 text-center">Spend Distribution</h4>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
                     <RechartsPieChart>
                       <Pie
                         data={(draftSnapchatCampaigns || []).slice(0, 5)}
@@ -1273,7 +1273,7 @@ export default function App() {
                 
                 {/* Visual Chart for Google Ads Performance */}
                 <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
                     <BarChart data={(draftGoogleAdsCampaigns || []).slice(0, 8)}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                       <XAxis 
@@ -1374,7 +1374,7 @@ export default function App() {
                 
                 {/* Visual Chart for TikTok Performance */}
                 <div className="mb-8 p-6 bg-white/50 border border-black/10 rounded-2xl h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
                     <BarChart data={(draftTiktokCampaigns || []).slice(0, 8)}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                       <XAxis 
