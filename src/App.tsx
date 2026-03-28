@@ -103,10 +103,10 @@ const initialHero = {
 };
 
 const initialStats = [
-  { label: 'Total Impressions', value: '1.58M+', sub: 'Aggregated Campaigns', icon: 'Globe' },
-  { label: 'Total Conversions', value: '0', sub: 'High-Intent Actions', icon: 'Target' },
-  { label: 'Total Clicks', value: '24K+', sub: 'Traffic & Engagement', icon: 'MousePointer2' },
-  { label: 'Avg. CPC', value: '$0.22', sub: 'Optimized Bidding', icon: 'TrendingUp' },
+  { label: 'Total Impressions', value: '2.85M+', sub: 'Aggregated Campaigns', icon: 'Globe' },
+  { label: 'Total Conversions', value: '34.2K+', sub: 'High-Intent Actions', icon: 'Target' },
+  { label: 'Total Clicks', value: '58.6K+', sub: 'Traffic & Engagement', icon: 'MousePointer2' },
+  { label: 'Avg. CPC', value: '$0.16', sub: 'Optimized Bidding', icon: 'TrendingUp' },
 ];
 
 const bestCampaigns = [
