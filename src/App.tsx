@@ -244,27 +244,39 @@ const initialProjects = [
 const initialInsights = [
   {
     id: '1',
-    title: 'Snapchat Sales Campaign',
-    market: 'Saudi Arabia Market',
+    title: 'TikTok UGC Strategy',
+    market: 'UGC Campaign - High Engagement',
     metrics: [
-      { label: 'Click Rate', value: '1.94%' },
-      { label: 'ECPC', value: '$0.22' }
+      { label: 'Total Clicks', value: '17,885' },
+      { label: 'Avg. CPC', value: '$0.03' }
     ],
-    description: 'Achieved 100% female audience penetration with iOS-exclusive targeting, resulting in high-quality traffic for luxury and beauty segments.',
+    description: 'Achieved exceptional performance with a 7.18% CTR, driving high-quality traffic through authentic UGC content at a very low cost per click.',
     icon: 'Smartphone',
-    color: '#fffc00'
+    color: '#EE1D52'
   },
   {
     id: '2',
-    title: 'TikTok Conversion Ads',
-    market: 'E-commerce Focus',
+    title: 'Google Ads Performance',
+    market: 'Search & Display - Sound 2',
     metrics: [
-      { label: 'Impressions', value: '244K+' },
-      { label: 'CPC (Destination)', value: 'SAR 0.19' }
+      { label: 'Impressions', value: '864K+' },
+      { label: 'Clicks', value: '11,498' }
     ],
-    description: 'Optimized ad structures to maintain low CPMs while scaling reach, delivering over 2,600+ high-intent clicks within targeted budget windows.',
-    icon: 'BarChart3',
-    color: '#00f2ea'
+    description: 'Scaled reach significantly with over 864,000 impressions, maintaining a consistent flow of traffic with an optimized CPC of $0.18.',
+    icon: 'Globe',
+    color: '#4285F4'
+  },
+  {
+    id: '3',
+    title: 'Snapchat Sales Funnel',
+    market: 'UGC Ad - Conversion Focus',
+    metrics: [
+      { label: 'LPV', value: '1,219' },
+      { label: 'Cost per LPV', value: '$0.42' }
+    ],
+    description: 'Successfully drove high-intent users to landing pages with a focused UGC approach on Snapchat, achieving a competitive cost per landing page view.',
+    icon: 'Zap',
+    color: '#FFFC00'
   }
 ];
 
@@ -907,6 +919,15 @@ export default function App() {
                           })}
                         />
                       </label>
+                      {draftHero.image && (
+                        <button 
+                          onClick={() => setDraftHero({...draftHero, image: ''})}
+                          className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform"
+                          title="Delete Image"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </div>
                     <div className="mt-4 text-center">
                       <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Profile Picture</p>
@@ -1520,12 +1541,27 @@ export default function App() {
                               })}
                             />
                           </label>
+                          {project.image && (
+                            <button 
+                              onClick={() => {
+                                const newProjects = [...draftProjects];
+                                newProjects[i].image = '';
+                                setDraftProjects(newProjects);
+                              }}
+                              className="p-2 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 hover:border-red-500 transition-colors flex items-center gap-2 text-[10px] font-bold uppercase"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          )}
                         </div>
-                        {project.image && (
-                          <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border border-black/5">
+                        <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border border-black/5 bg-black/[0.02] flex items-center justify-center">
+                          {project.image ? (
                             <img src={project.image} alt="Preview" className="w-full h-full object-cover" />
-                          </div>
-                        )}
+                          ) : (
+                            <Camera size={20} className="text-black/10" />
+                          )}
+                        </div>
                       </div>
                       <textarea 
                         value={project.description} 
@@ -1613,12 +1649,27 @@ export default function App() {
                               })}
                             />
                           </label>
+                          {exp.image && (
+                            <button 
+                              onClick={() => {
+                                const newExp = [...draftExperiences];
+                                newExp[i].image = '';
+                                setDraftExperiences(newExp);
+                              }}
+                              className="p-2 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 hover:border-red-500 transition-colors flex items-center gap-2 text-[10px] font-bold uppercase"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          )}
                         </div>
-                        {exp.image && (
-                          <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border border-black/5">
+                        <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border border-black/5 bg-black/[0.02] flex items-center justify-center">
+                          {exp.image ? (
                             <img src={exp.image} alt="Preview" className="w-full h-full object-cover" />
-                          </div>
-                        )}
+                          ) : (
+                            <Camera size={20} className="text-black/10" />
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         {(exp.description || []).map((desc, j) => (
