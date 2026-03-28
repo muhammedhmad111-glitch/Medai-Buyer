@@ -175,22 +175,38 @@ const initialExperiences = [
     period: 'Oct 2024 - Present',
     image: '',
     description: [
-      'Planned and optimized paid campaigns for multiple clients in F&B and E-commerce.',
+      'Planned, launched, and optimized paid campaigns for multiple clients in food & beverage, e-commerce, and services.',
       'Managed advertising budgets ranging from $200 to $5,000+ per month.',
-      'Generated consistent increases in ROI through optimized ad structures and A/B testing.',
-      'Analyzed complex campaign data (CPC, CTR, ROAS) to deliver weekly performance reports.'
+      'Generated consistent increases in engagement, conversions, and ROI through optimized ad structures and testing.',
+      'Created campaign strategies including audience research, custom audiences, retargeting, and lookalike audiences.',
+      'Analyzed campaign data (CPC, CTR, CPM, ROAS) and prepared weekly performance reports for clients.',
+      'Worked closely with designers and content creators to improve ad creatives and messaging.',
+      'Managed full advertising cycles on Snapchat Ads, achieving strong traffic and conversion performance.'
     ]
   },
   {
     role: 'Social Media Content & Campaign Coordinator',
-    company: 'Sound & Fog Cafe',
-    period: 'Dec 2024 - Present',
+    company: 'Sound & Fog Cafe | Part-time',
+    period: 'Dec 2024 – Present',
     image: '',
     description: [
-      'Coordinated paid traffic campaigns for restaurant promotions and events.',
-      'Developed ad creatives for Snapchat, Instagram, and TikTok.',
-      'Increased store visits through targeted ads and optimized bidding strategies.',
-      'Analyzed customer behavior to create high-converting audience segments.'
+      'Coordinated paid traffic campaigns for restaurant promotions, discounts, and events.',
+      'Developed and managed ad creatives for Snapchat, Instagram, and TikTok.',
+      'Increased store visits and online engagement through targeted ads and optimized bidding strategies.',
+      'Analyzed customer behavior and created targeted audience segments for better ad performance.'
+    ]
+  }
+];
+
+const initialEducation = [
+  {
+    degree: 'Bachelor of Mechanical Engineering',
+    year: '2022',
+    project: 'HVAC and Firefighting system for international school',
+    grade: 'Excellent',
+    responsibilities: [
+      'Made hydraulic calculations for the lines to choose the appropriate pump.',
+      'Calculated the loads of HVAC system.'
     ]
   }
 ];
@@ -304,6 +320,7 @@ export default function App() {
   const [googleAdsCampaignsList, setGoogleAdsCampaignsList] = useState(initialGoogleAdsCampaigns);
   const [tiktokCampaignsList, setTiktokCampaignsList] = useState(initialTikTokCampaigns);
   const [experiences, setExperiences] = useState(initialExperiences);
+  const [education, setEducation] = useState(initialEducation);
   const [skills, setSkills] = useState(initialSkills);
   const [projects, setProjects] = useState(initialProjects);
   const [insights, setInsights] = useState(initialInsights);
@@ -316,6 +333,7 @@ export default function App() {
   const [draftGoogleAdsCampaigns, setDraftGoogleAdsCampaigns] = useState(googleAdsCampaignsList);
   const [draftTiktokCampaigns, setDraftTiktokCampaigns] = useState(tiktokCampaignsList);
   const [draftExperiences, setDraftExperiences] = useState(experiences);
+  const [draftEducation, setDraftEducation] = useState(education);
   const [draftSkills, setDraftSkills] = useState(skills);
   const [draftProjects, setDraftProjects] = useState(projects);
   const [draftInsights, setDraftInsights] = useState(insights);
@@ -341,6 +359,7 @@ export default function App() {
         const savedGoogle = localStorage.getItem('portfolio_google');
         const savedTiktok = localStorage.getItem('portfolio_tiktok');
         const savedExp = localStorage.getItem('portfolio_exp');
+        const savedEdu = localStorage.getItem('portfolio_edu');
         const savedSkills = localStorage.getItem('portfolio_skills');
         const savedProjects = localStorage.getItem('portfolio_projects');
         const savedInsights = localStorage.getItem('portfolio_insights');
@@ -352,6 +371,7 @@ export default function App() {
         if (savedGoogle) setGoogleAdsCampaignsList(JSON.parse(savedGoogle));
         if (savedTiktok) setTiktokCampaignsList(JSON.parse(savedTiktok));
         if (savedExp) setExperiences(JSON.parse(savedExp));
+        if (savedEdu) setEducation(JSON.parse(savedEdu));
         if (savedSkills) setSkills(JSON.parse(savedSkills));
         if (savedProjects) setProjects(JSON.parse(savedProjects));
         if (savedInsights) setInsights(JSON.parse(savedInsights));
@@ -415,6 +435,15 @@ export default function App() {
       }
     });
 
+    // Listen to Education
+    const unsubEducation = onSnapshot(collection(db, 'users', user.uid, 'education'), (querySnap) => {
+      if (!querySnap.empty) {
+        const data = querySnap.docs.map(d => d.data() as typeof initialEducation[0]);
+        setEducation(data);
+        setDraftEducation(data);
+      }
+    });
+
     // Listen to Skills
     const unsubSkills = onSnapshot(collection(db, 'users', user.uid, 'skills'), (querySnap) => {
       if (!querySnap.empty) {
@@ -449,6 +478,7 @@ export default function App() {
       unsubGoogleAds();
       unsubTikTok();
       unsubExperiences();
+      unsubEducation();
       unsubSkills();
       unsubProjects();
       unsubInsights();
@@ -495,6 +525,7 @@ export default function App() {
     setDraftGoogleAdsCampaigns(JSON.parse(JSON.stringify(googleAdsCampaignsList)));
     setDraftTiktokCampaigns(JSON.parse(JSON.stringify(tiktokCampaignsList)));
     setDraftExperiences(JSON.parse(JSON.stringify(experiences)));
+    setDraftEducation(JSON.parse(JSON.stringify(education)));
     setDraftSkills([...skills]);
     setDraftProjects(JSON.parse(JSON.stringify(projects)));
     setDraftInsights(JSON.parse(JSON.stringify(insights)));
@@ -579,6 +610,11 @@ export default function App() {
         await setDoc(doc(expCol, exp.company), exp);
       }
 
+      const eduCol = collection(db, 'users', user.uid, 'education');
+      for (const edu of draftEducation) {
+        await setDoc(doc(eduCol, edu.degree), edu);
+      }
+
       const skillCol = collection(db, 'users', user.uid, 'skills');
       for (const skill of draftSkills) {
         await setDoc(doc(skillCol, skill.name), skill);
@@ -607,6 +643,7 @@ export default function App() {
     setGoogleAdsCampaignsList(draftGoogleAdsCampaigns);
     setTiktokCampaignsList(draftTiktokCampaigns);
     setExperiences(draftExperiences);
+    setEducation(draftEducation);
     setSkills(draftSkills);
     setProjects(draftProjects);
     setInsights(draftInsights);
@@ -630,6 +667,7 @@ export default function App() {
     safeSave('portfolio_google', draftGoogleAdsCampaigns);
     safeSave('portfolio_tiktok', draftTiktokCampaigns);
     safeSave('portfolio_exp', draftExperiences);
+    safeSave('portfolio_edu', draftEducation);
     safeSave('portfolio_skills', draftSkills);
     safeSave('portfolio_projects', draftProjects);
     safeSave('portfolio_insights', draftInsights);
@@ -1757,6 +1795,120 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Education Management */}
+              <div className="mb-12">
+                <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
+                  <Brain size={14} /> Education
+                </h3>
+                <div className="space-y-6">
+                  {(draftEducation || []).map((edu, i) => (
+                    <div key={i} className="p-6 border border-black/10 bg-white/50 rounded-xl space-y-4">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <input 
+                            value={edu.degree} 
+                            onChange={(e) => {
+                              const newEdu = [...draftEducation];
+                              newEdu[i].degree = e.target.value;
+                              setDraftEducation(newEdu);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 font-bold"
+                            placeholder="Degree"
+                          />
+                          <input 
+                            value={edu.year} 
+                            onChange={(e) => {
+                              const newEdu = [...draftEducation];
+                              newEdu[i].year = e.target.value;
+                              setDraftEducation(newEdu);
+                            }}
+                            className="bg-transparent border-b border-black/10 py-1 font-bold"
+                            placeholder="Year"
+                          />
+                        </div>
+                        <button 
+                          onClick={() => setDraftEducation(draftEducation.filter((_, idx) => idx !== i))}
+                          className="text-black/20 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Graduation Project</label>
+                          <input 
+                            value={edu.project} 
+                            onChange={(e) => {
+                              const newEdu = [...draftEducation];
+                              newEdu[i].project = e.target.value;
+                              setDraftEducation(newEdu);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-xs"
+                            placeholder="Project Title"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase opacity-30">Grade</label>
+                          <input 
+                            value={edu.grade} 
+                            onChange={(e) => {
+                              const newEdu = [...draftEducation];
+                              newEdu[i].grade = e.target.value;
+                              setDraftEducation(newEdu);
+                            }}
+                            className="w-full bg-transparent border-b border-black/10 py-1 text-xs"
+                            placeholder="Grade"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase opacity-30">Responsibilities</label>
+                        {(edu.responsibilities || []).map((resp, j) => (
+                          <div key={j} className="flex gap-2">
+                            <input 
+                              value={resp} 
+                              onChange={(e) => {
+                                const newEdu = [...draftEducation];
+                                newEdu[i].responsibilities[j] = e.target.value;
+                                setDraftEducation(newEdu);
+                              }}
+                              className="bg-transparent border-b border-black/5 py-1 text-sm flex-1"
+                              placeholder="Responsibility"
+                            />
+                            <button 
+                              onClick={() => {
+                                const newEdu = [...draftEducation];
+                                newEdu[i].responsibilities = newEdu[i].responsibilities.filter((_, idx) => idx !== j);
+                                setDraftEducation(newEdu);
+                              }}
+                              className="text-black/20 hover:text-red-500"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                        <button 
+                          onClick={() => {
+                            const newEdu = [...draftEducation];
+                            newEdu[i].responsibilities.push('New responsibility');
+                            setDraftEducation(newEdu);
+                          }}
+                          className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100"
+                        >
+                          + Add Line
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => setDraftEducation([...draftEducation, { degree: 'New Degree', year: '2024', project: '', grade: '', responsibilities: [] }])}
+                    className="w-full p-4 border border-dashed border-black/20 rounded-xl flex items-center justify-center gap-2 opacity-40 hover:opacity-100 transition-opacity"
+                  >
+                    <Plus size={16} /> Add Education
+                  </button>
+                </div>
+              </div>
+
               {/* Skills Management */}
               <div className="mb-12">
                 <h3 className="text-xs font-bold uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2">
@@ -1938,13 +2090,14 @@ export default function App() {
           <div className="font-mono text-sm font-bold tracking-tighter uppercase">
             Muhammed Saad / Media Buyer
           </div>
-          <div className="hidden md:flex gap-8 text-xs font-medium uppercase tracking-widest">
-            <a href="#results" className="hover:opacity-50 transition-opacity">Results</a>
-            <a href="#projects" className="hover:opacity-50 transition-opacity">Projects</a>
-            <a href="#experience" className="hover:opacity-50 transition-opacity">Experience</a>
-            <a href="#skills" className="hover:opacity-50 transition-opacity">Expertise</a>
-            <a href="#contact" className="hover:opacity-50 transition-opacity">Contact</a>
-          </div>
+            <div className="hidden md:flex gap-8 text-xs font-medium uppercase tracking-widest">
+              <a href="#results" className="hover:opacity-50 transition-opacity">Results</a>
+              <a href="#projects" className="hover:opacity-50 transition-opacity">Projects</a>
+              <a href="#experience" className="hover:opacity-50 transition-opacity">Experience</a>
+              <a href="#education" className="hover:opacity-50 transition-opacity">Education</a>
+              <a href="#skills" className="hover:opacity-50 transition-opacity">Expertise</a>
+              <a href="#contact" className="hover:opacity-50 transition-opacity">Contact</a>
+            </div>
         </div>
       </nav>
 
@@ -2365,6 +2518,57 @@ export default function App() {
                           </li>
                         ))}
                       </ul>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Education Section */}
+        {education && education.length > 0 && (
+          <section id="education" className="py-24 px-6 bg-black/5">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col md:flex-row gap-12">
+                <div className="md:w-1/3">
+                  <h2 className="text-sm font-bold uppercase tracking-[0.2em] opacity-40 sticky top-32">
+                    Academic <br /> Background
+                  </h2>
+                </div>
+                <div className="md:w-2/3 space-y-24">
+                  {(education || []).map((edu, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      className="group"
+                    >
+                      <div className="flex justify-between items-baseline mb-6">
+                        <h3 className="text-3xl font-bold tracking-tight">{edu.degree}</h3>
+                        <span className="font-mono text-xs opacity-40">{edu.year}</span>
+                      </div>
+                      
+                      <div className="space-y-8">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-2">Graduation Project</div>
+                          <div className="text-xl font-medium mb-2">{edu.project}</div>
+                          <div className="text-sm font-bold text-black/40 uppercase tracking-widest">Grade: {edu.grade}</div>
+                        </div>
+
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4">Core Responsibilities</div>
+                          <ul className="space-y-4">
+                            {(edu.responsibilities || []).map((item, j) => (
+                              <li key={j} className="flex gap-4 text-black/70 leading-relaxed">
+                                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-black/20 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
                     </motion.div>
                   ))}
                 </div>
