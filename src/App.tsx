@@ -99,7 +99,7 @@ const initialHero = {
   description: 'Results-driven Media Buyer with hands-on experience in planning, launching, and optimizing paid advertising campaigns across Meta, Snapchat, TikTok, and Google Ads.',
   location: 'Egypt',
   workMode: 'Remote',
-  image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=400&h=400&auto=format&fit=crop'
+  image: ''
 };
 
 const initialStats = [
@@ -173,7 +173,7 @@ const initialExperiences = [
     role: 'Media Buyer',
     company: 'Freelance',
     period: 'Oct 2024 - Present',
-    image: 'https://picsum.photos/seed/media/800/600',
+    image: '',
     description: [
       'Planned and optimized paid campaigns for multiple clients in F&B and E-commerce.',
       'Managed advertising budgets ranging from $200 to $5,000+ per month.',
@@ -185,7 +185,7 @@ const initialExperiences = [
     role: 'Social Media Content & Campaign Coordinator',
     company: 'Sound & Fog Cafe',
     period: 'Dec 2024 - Present',
-    image: 'https://picsum.photos/seed/cafe/800/600',
+    image: '',
     description: [
       'Coordinated paid traffic campaigns for restaurant promotions and events.',
       'Developed ad creatives for Snapchat, Instagram, and TikTok.',
@@ -215,28 +215,28 @@ const initialProjects = [
     title: 'E-commerce Scaling Strategy',
     description: 'Scaled a niche e-commerce brand from $500 to $5,000 monthly spend while maintaining a 3.5x ROAS using Meta and TikTok Ads.',
     link: '#',
-    image: 'https://picsum.photos/seed/ecommerce/800/600',
+    image: '',
     tags: ['Meta Ads', 'TikTok', 'E-commerce']
   },
   {
     title: 'F&B Lead Generation',
     description: 'Increased store visits for Sound & Fog Cafe by 40% through localized Snapchat and Instagram campaigns targeting high-intent foodies.',
     link: '#',
-    image: 'https://picsum.photos/seed/food/800/600',
+    image: '',
     tags: ['Snapchat', 'Instagram', 'Local SEO']
   },
   {
     title: 'Luxury Beauty Campaign',
     description: 'Achieved 100% female audience penetration for a luxury beauty brand using iOS-specific targeting on Snapchat Ads.',
     link: '#',
-    image: 'https://picsum.photos/seed/beauty/800/600',
+    image: '',
     tags: ['Snapchat', 'iOS Targeting', 'Luxury']
   },
   {
     title: 'Real Estate Funnel Optimization',
     description: 'Developed a full-funnel strategy for a real estate client, reducing CPL by 25% through advanced retargeting and lookalike audiences.',
     link: '#',
-    image: 'https://picsum.photos/seed/realestate/800/600',
+    image: '',
     tags: ['Google Ads', 'Retargeting', 'Real Estate']
   }
 ];
